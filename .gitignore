@@ -1,0 +1,14 @@
+# Environment Variables
+.env
+
+# Database lokal
+db.sqlite3
+
+# Python Virtual Environment
+venv/
+__pycache__/
+*.pyc
+
+# Folder statis
+static/
+media/
