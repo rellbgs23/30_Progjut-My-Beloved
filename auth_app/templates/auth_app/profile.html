@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile - Hospital System</title>
+</head>
+<body>
+    <h1>Profile</h1>
+
+    <p>Username: {{ request.user.username }}</p>
+    <p>MFA Enabled: {{ request.user.mfaEnabled }}</p>
+
+    {% if request.user.staff %}
+        <p>Staff Name: {{ request.user.staff.name }}</p>
+        <p>Role: {{ request.user.staff.role }}</p>
+    {% endif %}
+
+    <form method="post" action="{% url 'auth_app:logout' %}">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+    </form>
+</body>
+</html>
