@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Hospital System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --navy:       #0b1f3a;
+            --navy-mid:   #122848;
+            --teal:       #0d7377;
+            --teal-light: #14a085;
+            --cream:      #f5f2ec;
+            --warm-white: #fdfcfa;
+            --muted:      #7a8a9a;
+            --border:     #d6dde6;
+            --error-bg:   #fff0f0;
+            --error-text: #b03030;
+            --shadow-sm:  0 2px 8px rgba(11,31,58,0.08);
+            --shadow-md:  0 8px 32px rgba(11,31,58,0.14);
+            --shadow-lg:  0 20px 60px rgba(11,31,58,0.18);
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--navy);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Atmospheric background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 10%, rgba(13,115,119,0.18) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at 85% 90%, rgba(13,115,119,0.10) 0%, transparent 55%),
+                linear-gradient(160deg, #0b1f3a 0%, #0e2d4d 50%, #0b1f3a 100%);
+            z-index: 0;
+        }
+
+        /* Subtle grid pattern */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size: 48px 48px;
+            z-index: 0;
+        }
+
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 460px;
+            padding: 24px 20px;
+            animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(28px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Brand mark */
+        .brand {
+            text-align: center;
+            margin-bottom: 36px;
+            animation: fadeUp 0.7s 0.05s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .brand-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
+            border-radius: 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 20px rgba(13,115,119,0.45);
+        }
+
+        .brand-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: none;
+            stroke: #fff;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .brand-name {
+            font-family: 'Crimson Pro', Georgia, serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: 0.01em;
+            display: block;
+        }
+
+        .brand-tagline {
+            font-size: 0.78rem;
+            font-weight: 300;
+            color: rgba(255,255,255,0.45);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-top: 3px;
+        }
+
+        /* Card */
+        .card {
+            background: var(--warm-white);
+            border-radius: 20px;
+            padding: 40px 40px 36px;
+            box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.06);
+            animation: fadeUp 0.7s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .card-header {
+            margin-bottom: 28px;
+        }
+
+        .card-header h1 {
+            font-family: 'Crimson Pro', Georgia, serif;
+            font-size: 1.85rem;
+            font-weight: 600;
+            color: var(--navy);
+            letter-spacing: -0.01em;
+            line-height: 1.1;
+        }
+
+        .card-header p {
+            font-size: 0.875rem;
+            color: var(--muted);
+            margin-top: 6px;
+            font-weight: 300;
+        }
+
+        /* Messages / Alerts */
+        .messages {
+            margin-bottom: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .messages p {
+            background: var(--error-bg);
+            color: var(--error-text);
+            border: 1px solid rgba(176,48,48,0.18);
+            border-left: 3px solid var(--error-text);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            font-weight: 400;
+            line-height: 1.45;
+        }
+
+        /* Form fields rendered by Django's form.as_p */
+        .login-form p {
+            margin-bottom: 18px;
+        }
+
+        .login-form label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--navy);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 7px;
+        }
+
+        .login-form input[type="text"],
+        .login-form input[type="email"],
+        .login-form input[type="password"],
+        .login-form input[type="number"],
+        .login-form select,
+        .login-form textarea {
+            width: 100%;
+            padding: 11px 15px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.925rem;
+            color: var(--navy);
+            background: #fff;
+            transition: border-color 0.18s, box-shadow 0.18s;
+            outline: none;
+            appearance: none;
+        }
+
+        .login-form input:focus,
+        .login-form select:focus,
+        .login-form textarea:focus {
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(13,115,119,0.12);
+        }
+
+        .login-form input::placeholder {
+            color: #b0bcc8;
+        }
+
+        /* Checkbox row */
+        .login-form input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--teal);
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        /* Error list from Django */
+        .login-form ul.errorlist {
+            list-style: none;
+            margin: 6px 0 0;
+        }
+
+        .login-form ul.errorlist li {
+            font-size: 0.8rem;
+            color: var(--error-text);
+        }
+
+        /* Submit button */
+        .btn-primary {
+            display: block;
+            width: 100%;
+            padding: 13px 20px;
+            background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
+            color: #fff;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.925rem;
+            font-weight: 500;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            letter-spacing: 0.02em;
+            margin-top: 24px;
+            transition: opacity 0.18s, transform 0.15s, box-shadow 0.18s;
+            box-shadow: 0 4px 16px rgba(13,115,119,0.35);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(rgba(255,255,255,0.08), transparent);
+            pointer-events: none;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 22px rgba(13,115,119,0.45);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Footer note */
+        .card-footer {
+            text-align: center;
+            margin-top: 22px;
+            font-size: 0.78rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .card-footer a {
+            color: var(--teal);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .card-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 24px 0;
+        }
+
+        @media (max-width: 500px) {
+            .card {
+                padding: 30px 22px 26px;
+                border-radius: 16px;
+            }
+
+            .page-wrapper {
+                padding: 20px 16px;
+            }
+
+            .card-header h1 {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper" role="main">
+
+        <div class="brand" aria-label="Hospital System">
+            <div class="brand-icon" aria-hidden="true">
+                <!-- Cross / medical icon -->
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="9" y="2" width="6" height="20" rx="1.5"/>
+                    <rect x="2" y="9" width="20" height="6" rx="1.5"/>
+                </svg>
+            </div>
+            <span class="brand-name">MediCore</span>
+            <div class="brand-tagline">Hospital Information System</div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h1>Welcome back</h1>
+                <p>Sign in to access your hospital portal</p>
+            </div>
+
+            {% if messages %}
+                <div class="messages" role="alert" aria-live="polite">
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" class="login-form" novalidate>
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn-primary">Sign In</button>
+            </form>
+
+            <div class="card-footer">
+                Secure access · All sessions are monitored
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
