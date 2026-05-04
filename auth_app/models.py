@@ -24,7 +24,7 @@ class UserAccount(AbstractUser):
 
     def lock_account(self, minutes=15):
         self.lockedUntil = timezone.now() + timezone.timedelta(minutes=minutes)
-        self.save(update_fields=["lockedUntil"])
+        self.save(update_fields=["failedLoginAttempts", "lockedUntil"])
 
     def reset_failed_login(self):
         self.failedLoginAttempts = 0
