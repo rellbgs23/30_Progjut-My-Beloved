@@ -1,3 +1,31 @@
 from django.contrib import admin
+from .models import Patient, Appointment, Encounter, MedicalRecordEntry
 
-# Register your models here.
+
+@admin.register(Patient)
+class PatientAdmin(admin.ModelAdmin):
+    list_display = ("mrn", "name", "dateOfBirth")
+    search_fields = ("mrn", "name")
+
+
+@admin.register(Appointment)
+class AppointmentAdmin(admin.ModelAdmin):
+    list_display = ("patient", "doctor", "scheduledAt", "status")
+    list_filter = ("status", "scheduledAt")
+
+
+@admin.register(Encounter)
+class EncounterAdmin(admin.ModelAdmin):
+    list_display = ("patient", "staff", "dateTime")
+    list_filter = ("dateTime",)
+
+
+@admin.register(MedicalRecordEntry)
+class MedicalRecordEntryAdmin(admin.ModelAdmin):
+    list_display = ("id", "encounter", "createdAt")
+    readonly_fields = (
+        "diagnosis_encrypted",
+        "treatmentPlan_encrypted",
+        "notes_encrypted",
+        "createdAt",
+    )
