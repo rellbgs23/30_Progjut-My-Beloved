@@ -1,14 +1,15 @@
-# Environment Variables
 .env
-
-# Database lokal
-db.sqlite3
-
-# Python Virtual Environment
 venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
 
-# Folder statis
-static/
+db.sqlite3
 media/
+staticfiles/
+
+.idea/
+.vscode/
+.DS_Store
