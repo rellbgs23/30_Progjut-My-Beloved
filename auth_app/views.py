@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_POST
 
 from .forms import SecureLoginForm
 from .models import UserAccount
@@ -54,6 +55,7 @@ def login_view(request):
     return render(request, "auth_app/login.html", {"form": form})
 
 
+@require_POST
 def logout_view(request):
     logout(request)
     return redirect("auth_app:login")
