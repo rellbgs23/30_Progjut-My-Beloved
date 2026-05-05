@@ -96,6 +96,17 @@ class Payment(models.Model):
             raise ValidationError(
                 "Payments can only be recorded for UNPAID invoices.")
 
+        current_payments = self.invoice.payment_set.aggregate(
+            total=models.Sum('paidAmount')
+        )['total'] or Decimal('0.00')
+
+        # cek apakah uang yang mau dibayar sekarang bikin totalnya melebihi tagihan
+        if current_payments + self.paidAmount > self.invoice.totalAmount:
+            raise ValidationError(
+                f"Invalid Payment: Amount exceeds the remaining invoice total. "
+                f"Remaining balance is {self.invoice.totalAmount - current_payments}."
+            )
+
     def recordPayment(self):
         self.full_clean()
         self.save()
