@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard</title>
+</head>
+<body>
+    <h1>Welcome, {{ patient.name }}</h1>
+    <p>MRN: {{ patient.mrn }}</p>
+
+    <ul>
+        <li>Total appointments: {{ appointment_count }}</li>
+        <li>Total encounters: {{ encounter_count }}</li>
+        <li>Unpaid invoices: {{ unpaid_invoice_count }}</li>
+    </ul>
+
+    <nav>
+        <a href="{% url 'core_app:patient_request_appointment' %}">Request appointment</a> |
+        <a href="{% url 'core_app:patient_appointments' %}">My appointments</a> |
+        <a href="{% url 'core_app:patient_encounters' %}">Medical history</a> |
+        <a href="{% url 'core_app:patient_invoices' %}">Invoices</a>
+    </nav>
+
+    <form method="post" action="{% url 'auth_app:logout' %}">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+    </form>
+</body>
+</html>

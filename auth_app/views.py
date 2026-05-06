@@ -47,6 +47,9 @@ def login_view(request):
             user.reset_failed_login()
             login(request, user)
 
+            if user.is_patient:
+                return redirect("core_app:patient_dashboard")
+
             return redirect("auth_app:profile")
 
     else:

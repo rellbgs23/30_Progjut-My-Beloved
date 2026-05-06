@@ -19,6 +19,15 @@ class Patient(models.Model):
     mrn = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=255)
     dateOfBirth = models.DateField()
+    address = models.CharField(max_length=255, blank=True)
+    phoneNumber = models.CharField(max_length=30, blank=True)
+
+    @classmethod
+    def generate_mrn(cls):
+        while True:
+            candidate = f"MRN-{uuid.uuid4().hex[:10].upper()}"
+            if not cls.objects.filter(mrn=candidate).exists():
+                return candidate
 
     def __str__(self):
         return f"{self.mrn} - {self.name}"

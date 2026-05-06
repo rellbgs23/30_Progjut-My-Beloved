@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical History</title>
+</head>
+<body>
+    <h1>Medical History</h1>
+    <ul>
+        {% for encounter in encounters %}
+            <li>
+                {{ encounter.dateTime }} - Dr. {{ encounter.staff.name }} - {{ encounter.complaint }}
+                <a href="{% url 'core_app:patient_encounter_detail' encounter.id %}">Detail</a>
+            </li>
+        {% empty %}
+            <li>No encounter history.</li>
+        {% endfor %}
+    </ul>
+    <p><a href="{% url 'core_app:patient_dashboard' %}">Back to dashboard</a></p>
+</body>
+</html>

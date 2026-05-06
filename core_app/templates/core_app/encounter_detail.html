@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encounter Detail</title>
+</head>
+<body>
+    <h1>Encounter Detail</h1>
+
+    <p>Date: {{ encounter.dateTime }}</p>
+    <p>Doctor: {{ encounter.staff.name }}</p>
+    <p>Complaint: {{ encounter.complaint }}</p>
+
+    <h2>Medical Record</h2>
+    {% if record %}
+        <p>Diagnosis: {{ diagnosis }}</p>
+        <p>Treatment Plan: {{ treatment_plan }}</p>
+    {% else %}
+        <p>No medical record yet.</p>
+    {% endif %}
+
+    <h2>Prescription</h2>
+    {% if prescription %}
+        <p>Status: {{ prescription.status }}</p>
+        <ul>
+            {% for item in prescription.items.all %}
+                <li>{{ item.medicineName }} - {{ item.dosage }} - qty {{ item.quantity }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No prescription issued.</p>
+    {% endif %}
+
+    <p><a href="{% url 'core_app:patient_encounters' %}">Back to medical history</a></p>
+</body>
+</html>
