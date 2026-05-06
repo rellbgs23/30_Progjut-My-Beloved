@@ -1,30 +1,116 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Patient Dashboard</title>
+    <style>
+        :root{
+            --accent:#0f766e; /* teal */
+            --muted:#6b7280;
+            --bg:#f7fafc;
+            --card:#ffffff;
+            --radius:12px;
+            --max:1100px;
+            --glass: rgba(15,118,110,0.08);
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            color-scheme: light;
+        }
+        *{box-sizing:border-box}
+        body{margin:0;background:linear-gradient(180deg,var(--bg),#eef2f6);color:#0f172a;line-height:1.35}
+        .container{max-width:var(--max);margin:28px auto;padding:20px}
+        header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+        .brand{display:flex;gap:14px;align-items:center}
+        .logo{width:54px;height:54px;border-radius:10px;background:var(--card);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px var(--glass)}
+        .logo svg{width:32px;height:32px;fill:var(--accent)}
+        h1{font-size:1.35rem;margin:0}
+        .sub{color:var(--muted);font-size:0.95rem}
+        .actions{display:flex;gap:10px;align-items:center}
+        .btn{background:var(--accent);color:white;padding:10px 14px;border-radius:10px;border:0;text-decoration:none;font-weight:600}
+        .btn-ghost{background:transparent;border:1px solid rgba(15,118,110,0.12);color:var(--accent);padding:8px 12px;border-radius:10px}
+        main{display:grid;grid-template-columns:1fr 320px;gap:20px}
+        .card{background:var(--card);padding:18px;border-radius:var(--radius);box-shadow:0 8px 30px rgba(2,6,23,0.06)}
+        .stats{display:flex;gap:12px}
+        .stat{flex:1;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(15,118,110,0.03), transparent)}
+        .stat strong{display:block;font-size:1.25rem}
+        nav.menu{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+        nav.menu a{display:block;padding:12px;border-radius:10px;text-decoration:none;color:var(--accent);background:transparent;border:1px solid transparent}
+        nav.menu a:hover{background:var(--glass)}
+        .right .card h3{margin-top:0}
+        footer{margin-top:18px;color:var(--muted);font-size:0.9rem}
+        @media (max-width:880px){main{grid-template-columns:1fr} .actions{flex-direction:row-reverse} .right{order:2}}
+    </style>
 </head>
 <body>
-    <h1>Welcome, {{ patient.name }}</h1>
-    <p>MRN: {{ patient.mrn }}</p>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <div class="logo" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.77 5.82 22 7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                </div>
+                <div>
+                    <h1>Welcome, {{ patient.name }}</h1>
+                    <div class="sub">MRN: <strong>{{ patient.mrn }}</strong></div>
+                </div>
+            </div>
+            <div class="actions">
+                <a class="btn" href="{% url 'core_app:patient_request_appointment' %}">Request Appointment</a>
+                <form method="post" action="{% url 'auth_app:logout' %}">{% csrf_token %}<button class="btn-ghost" type="submit">Logout</button></form>
+            </div>
+        </header>
 
-    <ul>
-        <li>Total appointments: {{ appointment_count }}</li>
-        <li>Total encounters: {{ encounter_count }}</li>
-        <li>Unpaid invoices: {{ unpaid_invoice_count }}</li>
-    </ul>
+        <main>
+            <section>
+                <div class="card">
+                    <div class="stats" role="list">
+                        <div class="stat" role="listitem">
+                            <div class="sub">Appointments</div>
+                            <strong>{{ appointment_count }}</strong>
+                        </div>
+                        <div class="stat" role="listitem">
+                            <div class="sub">Encounters</div>
+                            <strong>{{ encounter_count }}</strong>
+                        </div>
+                        <div class="stat" role="listitem">
+                            <div class="sub">Unpaid Invoices</div>
+                            <strong>{{ unpaid_invoice_count }}</strong>
+                        </div>
+                    </div>
 
-    <nav>
-        <a href="{% url 'core_app:patient_request_appointment' %}">Request appointment</a> |
-        <a href="{% url 'core_app:patient_appointments' %}">My appointments</a> |
-        <a href="{% url 'core_app:patient_encounters' %}">Medical history</a> |
-        <a href="{% url 'core_app:patient_invoices' %}">Invoices</a>
-    </nav>
+                    <div style="margin-top:14px">
+                        <nav class="menu" aria-label="Patient quick links">
+                            <a href="{% url 'core_app:patient_appointments' %}">My appointments</a>
+                            <a href="{% url 'core_app:patient_encounters' %}">Medical history</a>
+                            <a href="{% url 'core_app:patient_invoices' %}">Invoices</a>
+                        </nav>
+                    </div>
+                </div>
 
-    <form method="post" action="{% url 'auth_app:logout' %}">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-    </form>
+                <div class="card" style="margin-top:16px">
+                    <h3>Important</h3>
+                    <p class="sub">If you need urgent care, contact the hospital immediately. For regular appointments use the request form.</p>
+                </div>
+            </section>
+
+            <aside class="right">
+                <div class="card">
+                    <h3>Profile</h3>
+                    <p class="sub">Signed in as <strong>{{ request.user.get_username }}</strong></p>
+                    {% if request.user.staff %}
+                        <p class="sub">Staff: {{ request.user.staff.name }} — Role: {{ request.user.staff.role }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="card" style="margin-top:12px">
+                    <h3>Help & Support</h3>
+                    <p class="sub">Call: +62 21 555 1234<br>Email: support@hospital.example</p>
+                </div>
+            </aside>
+        </main>
+
+        <footer>
+            &copy; {{ now|date:"Y" }} Hospital System — Secure Patient Portal
+        </footer>
+    </div>
 </body>
 </html>
