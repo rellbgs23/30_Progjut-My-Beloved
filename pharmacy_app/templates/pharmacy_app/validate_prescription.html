@@ -1,0 +1,9 @@
+<h1>Validate Prescription</h1>
+
+<p>Prescription: {{ prescription.id }}</p>
+<p>Status: {{ prescription.status }}</p>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit">Validate</button>
+</form>

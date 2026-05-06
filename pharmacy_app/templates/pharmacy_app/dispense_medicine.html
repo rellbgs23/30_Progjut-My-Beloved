@@ -1,0 +1,9 @@
+<h1>Dispense Medicine</h1>
+
+<p>Prescription: {{ prescription.id }}</p>
+<p>Status: {{ prescription.status }}</p>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit">Dispense</button>
+</form>

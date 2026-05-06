@@ -1,0 +1,21 @@
+<h1>Prescription {{ prescription.id }}</h1>
+
+<p>Status: {{ prescription.status }}</p>
+<p>Encounter: {{ prescription.encounter.id }}</p>
+<p>Patient: {{ prescription.encounter.patient.name }}</p>
+<p>Prescriber: {{ prescription.encounter.staff.name }}</p>
+
+<h2>Items</h2>
+<ul>
+  {% for item in prescription.items.all %}
+    <li>{{ item.medicineName }} - {{ item.dosage }} - qty {{ item.quantity }}</li>
+  {% endfor %}
+</ul>
+
+{% if prescription.status == 'CREATED' %}
+  <a href="{% url 'pharmacy_app:validate_prescription' prescription.id %}">Validate</a>
+{% endif %}
+
+{% if prescription.status == 'VALIDATED' %}
+  <a href="{% url 'pharmacy_app:dispense_medicine' prescription.id %}">Dispense</a>
+{% endif %}

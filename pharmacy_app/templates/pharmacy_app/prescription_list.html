@@ -1,0 +1,14 @@
+<h1>Prescription Queue</h1>
+
+{% if prescriptions %}
+  <ul>
+    {% for prescription in prescriptions %}
+      <li>
+        {{ prescription.id }} - {{ prescription.encounter.patient.name }}
+        (<a href="{% url 'pharmacy_app:prescription_detail' prescription.id %}">detail</a>)
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No CREATED prescriptions available.</p>
+{% endif %}

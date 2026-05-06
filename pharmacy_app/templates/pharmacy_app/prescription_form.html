@@ -1,0 +1,18 @@
+<h1>Create Prescription</h1>
+
+<p>Encounter: {{ encounter.id }}</p>
+<p>Patient: {{ encounter.patient.name }}</p>
+
+<form method="post">
+  {% csrf_token %}
+  {{ formset.management_form }}
+
+  {% for form in formset %}
+    <fieldset>
+      <legend>Medicine {{ forloop.counter }}</legend>
+      {{ form.as_p }}
+    </fieldset>
+  {% endfor %}
+
+  <button type="submit">Save Prescription</button>
+</form>
