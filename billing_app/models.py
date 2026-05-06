@@ -112,9 +112,15 @@ class Payment(models.Model):
         self.save()
 
         # OCL: AuditLogExists
-        AuditLog.objects.create(
+        AuditLog.record_action(
+            action=AuditLog.Action.PAYMENT,
+            actor=self.processedBy,
             payment=self,
-            action=f"Payment {self.method} of {self.paidAmount} recorded for Invoice {self.invoice.id}"
+            detail={
+                'method': self.method,
+                'paidAmount': str(self.paidAmount),
+                'invoiceId': str(self.invoice_id),
+            },
         )
 
     def __str__(self):
@@ -122,10 +128,22 @@ class Payment(models.Model):
 
 
 class AuditLog(models.Model):
+    class Action(models.TextChoices):
+        PAYMENT = 'PAYMENT', 'Payment'
+        VALIDATE = 'VALIDATE', 'Validate Prescription'
+        DISPENSE = 'DISPENSE', 'Dispense Medicine'
+        AUTH_FAIL = 'AUTH_FAIL', 'Authentication Failed'
+        ROLE_FAIL = 'ROLE_FAIL', 'Role Check Failed'
+        SIG_FAIL = 'SIG_FAIL', 'Signature Verification Failed'
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    payment = models.ForeignKey(Payment, on_delete=models.RESTRICT)
+    payment = models.ForeignKey(Payment, on_delete=models.RESTRICT, null=True, blank=True)
+    actor = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True)
+    entityType = models.CharField(max_length=50, blank=True)
+    entityId = models.CharField(max_length=64, blank=True)
+    detail = models.JSONField(default=dict, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-    action = models.CharField(max_length=255)
+    action = models.CharField(max_length=40, choices=Action.choices)
 
     # Cryptographic Log Integrity
     hash = models.CharField(max_length=64, editable=False)
@@ -134,13 +152,35 @@ class AuditLog(models.Model):
         if not self.hash:
             last_log = AuditLog.objects.order_by('-timestamp').first()
             previous_hash = last_log.hash if last_log else "GENESIS_BLOCK"
-            data_to_hash = f"{self.action}|{self.payment.id}|{previous_hash}".encode(
-                'utf-8')
+            data_to_hash = (
+                f"{self.action}|{self.payment_id or ''}|{self.actor_id or ''}|"
+                f"{self.entityType}|{self.entityId}|{self.detail}|{previous_hash}"
+            ).encode('utf-8')
             self.hash = hashlib.sha256(data_to_hash).hexdigest()
         super().save(*args, **kwargs)
 
+    @classmethod
+    def record_action(cls, action, actor=None, payment=None, prescription=None, detail=None):
+        entity_type = ''
+        entity_id = ''
+
+        if prescription is not None:
+            entity_type = 'PRESCRIPTION'
+            entity_id = str(prescription.pk)
+
+        return cls.objects.create(
+            payment=payment,
+            actor=actor,
+            action=action,
+            entityType=entity_type,
+            entityId=entity_id,
+            detail=detail or {},
+        )
+
     def recordAction(self, action_desc):
-        self.action = action_desc
+        # Backward compatibility for older call sites.
+        self.action = self.Action.PAYMENT
+        self.detail = {'message': action_desc}
         self.save()
 
     def __str__(self):

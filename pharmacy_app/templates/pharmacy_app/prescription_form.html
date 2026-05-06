@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Prescription</title>
+  <style>
+    :root {
+      --bg: #f2f8fa;
+      --surface: #ffffff;
+      --surface-soft: #f8fbfc;
+      --line: #d7e5e9;
+      --text: #0f2b34;
+      --text-muted: #4b6570;
+      --primary: #0f766e;
+      --primary-strong: #115e59;
+      --shadow: 0 16px 40px rgba(15, 43, 52, 0.12);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 8% -12%, #99f6e4 0%, rgba(153, 246, 228, 0) 38%),
+        radial-gradient(circle at 100% 0%, #bfdbfe 0%, rgba(191, 219, 254, 0) 34%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .container {
+      width: min(1020px, calc(100% - 2rem));
+      margin: 2rem auto 3rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .hero {
+      border-radius: 24px;
+      padding: 1.3rem 1.5rem;
+      color: #ebfffe;
+      background: linear-gradient(130deg, #0f766e, #0b4f5c);
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.4rem, 2vw, 1.95rem);
+    }
+
+    .hero p {
+      margin: 0.5rem 0 0;
+      color: #c6f7f5;
+      font-size: 0.95rem;
+      word-break: break-word;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1rem;
+    }
+
+    .group-list {
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    fieldset {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 0.85rem;
+      background: var(--surface-soft);
+      margin: 0;
+    }
+
+    legend {
+      padding: 0 0.45rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    p {
+      margin: 0.45rem 0;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      padding: 0.64rem 0.72rem;
+      border: 1px solid #c6d6dd;
+      border-radius: 10px;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #14b8a6;
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
+    }
+
+    .actions {
+      margin-top: 0.9rem;
+      display: flex;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      appearance: none;
+      border: none;
+      border-radius: 10px;
+      padding: 0.7rem 1.15rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: background 160ms ease;
+      color: #fff;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+    }
+
+    .btn-primary:hover,
+    .btn-primary:focus-visible {
+      background: var(--primary-strong);
+    }
+
+    .btn-neutral {
+      background: #51656f;
+    }
+
+    .btn-neutral:hover,
+    .btn-neutral:focus-visible {
+      background: #3f5059;
+    }
+
+    @media (max-width: 620px) {
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container" aria-labelledby="page-title">
+    <header class="hero">
+      <h1 id="page-title">Create Prescription</h1>
+      <p>Encounter: {{ encounter.id }}</p>
+      <p>Patient: {{ encounter.patient.name }}</p>
+    </header>
+
+    <section class="card" aria-label="Prescription creation form">
+      <form method="post">
+        {% csrf_token %}
+        {{ formset.management_form }}
+
+        <div class="group-list">
+          {% for form in formset %}
+            <fieldset>
+              <legend>Medicine {{ forloop.counter }}</legend>
+              {{ form.as_p }}
+            </fieldset>
+          {% endfor %}
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">Save Prescription</button>
+          <a class="btn btn-neutral" href="{% url 'pharmacy_app:prescription_list' %}">Back to Queue</a>
+        </div>
+      </form>
+    </section>
+  </main>
+</body>
+</html>
