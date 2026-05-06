@@ -69,3 +69,13 @@ def profile_view(request):
         return redirect("auth_app:login")
 
     return render(request, "auth_app/profile.html")
+
+
+def access_denied_view(request):
+    """Render a simple Access Denied page with HTTP 403 status.
+
+    This page is used as the `login_url` target for `user_passes_test`
+    decorators when a logged-in user does not have the required role.
+    Returning status 403 makes it clear to clients and security tooling.
+    """
+    return render(request, "auth_app/denied.html", status=403)
