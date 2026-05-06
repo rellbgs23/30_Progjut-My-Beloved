@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Access Denied</title>
+  <style>
+    body{font-family:Inter, system-ui, -apple-system, Roboto, Arial;margin:0;background:#f3f6f8;color:#071124}
+    .wrap{max-width:760px;margin:60px auto;padding:18px}
+    .card{background:#fff;padding:24px;border-radius:12px;box-shadow:0 12px 40px rgba(2,6,23,0.06);text-align:center}
+    h1{margin:0 0 8px}
+    p{color:#6b7280}
+    a.btn{display:inline-block;margin-top:12px;padding:10px 14px;background:#0f766e;color:#fff;border-radius:10px;text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" role="alert" aria-live="assertive">
+      <h1>Access Denied</h1>
+      <p>You do not have permission to access this page.</p>
+      {% if user.is_authenticated %}
+        <p>Signed in as <strong>{{ user.get_username }}</strong></p>
+      {% endif %}
+      <a class="btn" href="{% url 'auth_app:login' %}">Return to login</a>
+    </div>
+  </div>
+</body>
+</html>

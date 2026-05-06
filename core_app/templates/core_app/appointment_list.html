@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>My Appointments</title>
+    <style>
+        body{font-family:Inter, system-ui, -apple-system, Roboto, Arial;margin:0;background:#f3f6f8;color:#0b1220}
+        .wrap{max-width:900px;margin:28px auto;padding:18px}
+        .card{background:#fff;padding:18px;border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.06)}
+        h1{margin:0 0 12px 0}
+        .list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+        .item{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:10px;border:1px solid #eef4f3}
+        .meta{color:#6b7280;font-size:0.95rem}
+        a.btn{display:inline-block;padding:8px 12px;background:#0f766e;color:#fff;border-radius:8px;text-decoration:none}
+        .empty{color:#6b7280}
+        @media(max-width:600px){.item{flex-direction:column;align-items:flex-start;gap:8px}}
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h1>My Appointments</h1>
+            <a class="btn" href="{% url 'core_app:patient_request_appointment' %}">Request</a>
+        </div>
+
+        <div class="card">
+            <ul class="list">
+                {% for appointment in appointments %}
+                    <li class="item">
+                        <div>
+                            <div><strong>{{ appointment.scheduledAt }}</strong></div>
+                            <div class="meta">Dr. {{ appointment.doctor.name }} • {{ appointment.status }}</div>
+                        </div>
+                        <div>
+                            <a href="{% url 'core_app:patient_appointment_detail' appointment.id %}" class="btn">Details</a>
+                        </div>
+                    </li>
+                {% empty %}
+                    <li class="item empty">No appointments found.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <p style="margin-top:12px"><a href="{% url 'core_app:patient_dashboard' %}">Back to dashboard</a></p>
+    </div>
+</body>
+</html>

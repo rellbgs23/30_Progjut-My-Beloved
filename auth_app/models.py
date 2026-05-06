@@ -7,6 +7,9 @@ from django.utils import timezone
 class UserAccount(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
+    # membedakan akun eksternal pasien dari akun internal staff.
+    is_patient = models.BooleanField(default=False)
+
     # MFA default akan lebih aman dibuat False.
     # Akun hanya bisa login jika field ini diaktifkan admin.
     mfaEnabled = models.BooleanField(default=False)
@@ -16,7 +19,9 @@ class UserAccount(AbstractUser):
     lockedUntil = models.DateTimeField(null=True, blank=True)
 
     def authenticate_mfa(self, token=None):
-        #  Login hanya boleh berhasil jika mfaEnabled=True.
+        # Pasien eksternal boleh login tanpa MFA internal staff.
+        if self.is_patient:
+            return True
         return self.mfaEnabled
 
     def is_locked(self):
