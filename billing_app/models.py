@@ -91,6 +91,9 @@ class Payment(models.Model):
     def clean(self):
         super().clean()
 
+        if self.invoice is None or self.paidAmount is None:
+            return
+
         # OCL: InvoiceMustBeUnpaid
         if self.invoice.status != Invoice.InvoiceStatus.UNPAID:
             raise ValidationError(

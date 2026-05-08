@@ -9,6 +9,9 @@ from pharmacy_app.models import Prescription
 
 from .forms import PatientAppointmentRequestForm, SelfRegistrationForm
 
+def home_view(request):
+    return render(request, 'core_app/home.html')
+
 
 def _get_patient_or_forbidden(request):
 	if not request.user.is_authenticated:
