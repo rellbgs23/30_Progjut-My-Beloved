@@ -17,7 +17,7 @@ def run_seeder():
     doctors = []
     for i in range(1, 11):
         user, _ = UserAccount.objects.get_or_create(username=f"doc{i}")
-        user.set_password("password123")
+        user.set_password("hitam123")
         user.is_staff = True
         user.mfaEnabled = True
         user.save()
@@ -28,7 +28,7 @@ def run_seeder():
     cashiers = []
     for i in range(1, 11):
         user, _ = UserAccount.objects.get_or_create(username=f"cashier{i}")
-        user.set_password("password123")
+        user.set_password("hitam123")
         user.is_staff = True
         user.mfaEnabled = True
         user.save()
@@ -39,7 +39,7 @@ def run_seeder():
     pharmacists = []
     for i in range(1, 11):
         user, _ = UserAccount.objects.get_or_create(username=f"pharma{i}")
-        user.set_password("password123")
+        user.set_password("hitam123")
         user.is_staff = True
         user.mfaEnabled = True
         user.save()
@@ -51,7 +51,7 @@ def run_seeder():
     for i in range(1, 11):
         user, _ = UserAccount.objects.get_or_create(
             username=f"patient{i}", defaults={"is_patient": True})
-        user.set_password("password123")
+        user.set_password("hitam123")
         user.save()
         patient, _ = Patient.objects.get_or_create(
             mrn=f"MRN-DATA-{i:03d}",
