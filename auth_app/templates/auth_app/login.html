@@ -11,7 +11,7 @@
     {% if messages %}
         <div class="messages" role="alert" aria-live="polite">
             {% for message in messages %}
-                <p class="{{ message.tags|default:'error' }}">{{ message }}</p>
+                <p class="{{ message.level_tag }}">{{ message }}</p>
             {% endfor %}
         </div>
     {% endif %}

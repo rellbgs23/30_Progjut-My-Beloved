@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% comment %}
+Layout dasar error. Sub-template (404/403/500) tinggal override:
+- block error_code
+- block error_title
+- block error_message
+Topbar tetap ditampilkan supaya user bisa langsung navigasi dari sini
+(kecuali di 500 yang mungkin DB error, layout tetap di-render tapi
+beberapa nav link bisa jadi tidak interaktif — itu by design).
+{% endcomment %}
+
+{% block title %}{% block error_title %}Error{% endblock %} — MediCore{% endblock %}
+
+{% block wrapper_class %}narrow{% endblock %}
+
+{% block content %}
+    <div class="error-page">
+        <div class="error-code" aria-hidden="true">{% block error_code %}---{% endblock %}</div>
+        <h1 class="error-title">{{ block.super }}{% block error_heading %}Something went wrong{% endblock %}</h1>
+        <p class="error-message">
+            {% block error_body %}We could not complete that request.{% endblock %}
+        </p>
+
+        <div class="error-actions">
+            <a class="btn btn-primary" href="{% url 'core_app:home' %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 12L12 3l9 9"/>
+                    <path d="M5 10v10a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1V10"/>
+                </svg>
+                Back to Home
+            </a>
+            <a class="btn btn-secondary" href="javascript:history.back()">Go Back</a>
+        </div>
+    </div>
+{% endblock %}

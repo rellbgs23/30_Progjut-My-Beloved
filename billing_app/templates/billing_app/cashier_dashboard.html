@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Cashier Dashboard — MediCore{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Cashier Dashboard</h1>
+            <p class="page-subtitle">Invoice and payment overview.</p>
+        </div>
+        <a class="btn btn-primary" href="{% url 'billing_app:process_payment' %}">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            New Payment
+        </a>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24">
+                    <line x1="12" y1="1" x2="12" y2="23"/>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+            </div>
+            <div class="stat-label">Unpaid Invoices</div>
+            <div class="stat-value">{{ unpaid_count }}</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M3 3v18h18"/>
+                    <path d="M7 13l4-4 4 4 6-6"/>
+                </svg>
+            </div>
+            <div class="stat-label">Outstanding (Rp)</div>
+            <div class="stat-value">{{ unpaid_total|floatformat:0 }}</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            <div class="stat-label">Today&apos;s Collection (Rp)</div>
+            <div class="stat-value">{{ todays_payments_total|floatformat:0 }}</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-label">
+            <div class="card-label-icon icon-amber" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+            <span class="card-label-text">Pending Invoices</span>
+        </div>
+
+        <ul class="mc-list">
+            {% for invoice in unpaid_invoices %}
+                <li class="mc-list-item">
+                    <div>
+                        <div class="primary">
+                            {{ invoice.encounter.patient.name }}
+                            &middot;
+                            Rp {{ invoice.totalAmount|floatformat:0 }}
+                        </div>
+                        <div class="secondary">
+                            Issued {{ invoice.createdAt|date:"d M Y" }} &middot;
+                            MRN {{ invoice.encounter.patient.mrn }}
+                        </div>
+                    </div>
+                    <a class="btn btn-primary btn-sm" href="{% url 'billing_app:process_payment' %}">Process</a>
+                </li>
+            {% empty %}
+                <li class="mc-list-empty">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <div>No pending invoices.</div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

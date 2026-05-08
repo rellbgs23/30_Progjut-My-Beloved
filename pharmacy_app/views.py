@@ -81,16 +81,30 @@ def create_prescription(request, encounter_id):
 @login_required
 @pharmacist_required
 def prescription_list(request):
-    prescriptions = (
-        Prescription.objects.filter(status=Prescription.RxStatus.CREATED)
-        .select_related("encounter__patient", "encounter__staff")
-        .prefetch_related("items")
-        .order_by("-encounter__dateTime")
+    base = Prescription.objects.select_related(
+        "encounter__patient", "encounter__staff"
+    ).prefetch_related("items")
+
+    pending = base.filter(status=Prescription.RxStatus.CREATED).order_by(
+        "-encounter__dateTime"
     )
+    validated = base.filter(status=Prescription.RxStatus.VALIDATED).order_by(
+        "-validatedAt"
+    )
+
     return render(
         request,
         "pharmacy_app/prescription_list.html",
-        {"prescriptions": prescriptions, "active_nav": "prescriptions"},
+        {
+            "pending": pending,
+            "validated": validated,
+            "pending_count": pending.count(),
+            "validated_count": validated.count(),
+            "dispensed_count": Prescription.objects.filter(
+                status=Prescription.RxStatus.DISPENSED
+            ).count(),
+            "active_nav": "dashboard",
+        },
     )
 
 

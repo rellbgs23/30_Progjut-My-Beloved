@@ -1,28 +1,56 @@
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Sum
 from django.shortcuts import redirect, render
+from django.utils import timezone
+
+from auth_app.decorators import staff_role_required
 
 from .forms import PaymentForm
+from .models import Invoice, Payment
 
 
-def is_cashier(user):
-    return (
-        user.is_authenticated
-        and hasattr(user, "staff")
-        and user.staff.role == "CASHIER"
+@login_required
+@staff_role_required("CASHIER")
+def cashier_dashboard(request):
+    """Halaman utama kasir: ringkasan invoice pending + shortcut ke payment."""
+
+    unpaid_qs = Invoice.objects.filter(status=Invoice.InvoiceStatus.UNPAID)
+
+    unpaid_invoices = (
+        unpaid_qs.select_related("encounter__patient")
+        .order_by("-createdAt")[:10]
+    )
+
+    unpaid_total = unpaid_qs.aggregate(total=Sum("totalAmount"))["total"] or 0
+
+    todays_payments_total = Payment.objects.filter(
+        processedBy__user=request.user,
+        paidAt__date=timezone.localdate(),
+    ).aggregate(total=Sum("paidAmount"))["total"] or 0
+
+    return render(
+        request,
+        "billing_app/cashier_dashboard.html",
+        {
+            "unpaid_invoices": unpaid_invoices,
+            "unpaid_count": unpaid_qs.count(),
+            "unpaid_total": unpaid_total,
+            "todays_payments_total": todays_payments_total,
+            "active_nav": "dashboard",
+        },
     )
 
 
 @login_required
-@user_passes_test(is_cashier, login_url="/auth/denied/")
+@staff_role_required("CASHIER")
 def process_payment(request):
     """Cashier view untuk mencatat pembayaran terhadap invoice UNPAID.
 
     Keamanan:
-    - @login_required + @user_passes_test(is_cashier): CWE-287 & CWE-862.
+    - @login_required + @staff_role_required("CASHIER").
     - `processedBy` di-inject dari request.user (tidak ada di form) sehingga
       identitas kasir tidak dapat di-spoof dari payload POST.
     - Transaksi di-wrap dalam transaction.atomic() + select_for_update pada
@@ -39,8 +67,6 @@ def process_payment(request):
 
                     # Lock invoice untuk durasi transaksi, lalu re-check
                     # sisa tagihan dari sumber truth (DB) sesudah lock.
-                    from .models import Invoice  # lokal untuk hindari circular
-
                     invoice = Invoice.objects.select_for_update().get(
                         pk=payment.invoice_id
                     )
@@ -68,22 +94,23 @@ def process_payment(request):
                         invoice.markAsPaid()
                         messages.success(
                             request,
-                            f"Pembayaran berhasil diproses. Invoice {invoice.id} berstatus PAID.",
+                            f"Pembayaran berhasil. Invoice {invoice.id} lunas.",
                         )
                     else:
                         messages.success(
                             request,
-                            "Pembayaran berhasil dicatat. Sisa tagihan masih menunggu.",
+                            "Pembayaran dicatat. Masih ada sisa tagihan.",
                         )
 
                 return redirect("billing_app:process_payment")
 
             except ValidationError as error:
-                # ValidationError bisa punya atribut yang berbeda-beda
-                # (message / messages / message_dict). Ambil versi string
-                # yang paling aman untuk ditampilkan ke user.
                 messages.error(request, "; ".join(error.messages))
     else:
         form = PaymentForm()
 
-    return render(request, "billing_app/payment_form.html", {"form": form})
+    return render(
+        request,
+        "billing_app/payment_form.html",
+        {"form": form, "active_nav": "payment"},
+    )

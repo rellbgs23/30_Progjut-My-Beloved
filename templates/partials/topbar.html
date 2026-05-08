@@ -1,9 +1,15 @@
 {% comment %}
-MediCore site header. Navigasi kontekstual ditampilkan berdasarkan role user:
-- Patient: Dashboard, Appointments, Medical History, Invoices
-- Doctor: Profile, Appointments, Encounters (lewat admin atau modul medical)
-- Pharmacist: Prescription Queue
-- Cashier: Payment Entry
+MediCore site header.
+
+Navigasi kontekstual per role setelah login:
+- Patient:     Dashboard, Appointments, History, Invoices
+- Doctor:      Dashboard, My Appointments, My Encounters
+- Registration: Dashboard, All Appointments, New Appointment
+- Pharmacist:  Prescription Queue
+- Cashier:     Dashboard, Payment Entry
+- Superuser:   nav utama + link admin
+
+Kalau user belum login, topbar menyisakan tombol "Sign In" di kanan.
 {% endcomment %}
 
 <header class="topbar" role="banner">
@@ -18,28 +24,53 @@ MediCore site header. Navigasi kontekstual ditampilkan berdasarkan role user:
             <span class="topbar-name">MediCore</span>
         </a>
 
-        {% if topbar_section %}
-            <div class="topbar-sep" aria-hidden="true"></div>
-            <span class="topbar-section">{{ topbar_section }}</span>
-        {% endif %}
-
         {% if request.user.is_authenticated %}
+            <div class="topbar-sep" aria-hidden="true"></div>
+            <span class="topbar-section">
+                {% if request.user.is_patient %}
+                    Patient Portal
+                {% elif request.user.staff.role == 'DOCTOR' %}
+                    Doctor
+                {% elif request.user.staff.role == 'PHARMACIST' %}
+                    Pharmacy
+                {% elif request.user.staff.role == 'CASHIER' %}
+                    Cashier
+                {% elif request.user.staff.role == 'REGISTRATION' %}
+                    Registration
+                {% elif request.user.is_superuser %}
+                    Admin
+                {% else %}
+                    Staff
+                {% endif %}
+            </span>
+
             <nav class="topbar-nav" aria-label="Primary navigation">
                 {% if request.user.is_patient %}
                     <a href="{% url 'core_app:patient_dashboard' %}" {% if active_nav == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
                     <a href="{% url 'core_app:patient_appointments' %}" {% if active_nav == 'appointments' %}class="active"{% endif %}>Appointments</a>
                     <a href="{% url 'core_app:patient_encounters' %}" {% if active_nav == 'encounters' %}class="active"{% endif %}>History</a>
                     <a href="{% url 'core_app:patient_invoices' %}" {% if active_nav == 'invoices' %}class="active"{% endif %}>Invoices</a>
+
                 {% elif request.user.staff.role == 'DOCTOR' %}
-                    <a href="{% url 'auth_app:profile' %}" {% if active_nav == 'profile' %}class="active"{% endif %}>Profile</a>
+                    <a href="{% url 'medical_app:doctor_dashboard' %}" {% if active_nav == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
+                    <a href="{% url 'medical_app:doctor_appointments' %}" {% if active_nav == 'appointments' %}class="active"{% endif %}>My Appointments</a>
+                    <a href="{% url 'medical_app:doctor_encounters' %}" {% if active_nav == 'encounters' %}class="active"{% endif %}>My Encounters</a>
+
+                {% elif request.user.staff.role == 'REGISTRATION' %}
+                    <a href="{% url 'medical_app:registration_dashboard' %}" {% if active_nav == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
+                    <a href="{% url 'medical_app:registration_appointments' %}" {% if active_nav == 'appointments' %}class="active"{% endif %}>All Appointments</a>
+                    <a href="{% url 'medical_app:appointment_create' %}" {% if active_nav == 'new_appointment' %}class="active"{% endif %}>New Appointment</a>
+
                 {% elif request.user.staff.role == 'PHARMACIST' %}
-                    <a href="{% url 'auth_app:profile' %}" {% if active_nav == 'profile' %}class="active"{% endif %}>Profile</a>
-                    <a href="{% url 'pharmacy_app:prescription_list' %}" {% if active_nav == 'prescriptions' %}class="active"{% endif %}>Prescription Queue</a>
+                    <a href="{% url 'pharmacy_app:prescription_list' %}" {% if active_nav == 'dashboard' or active_nav == 'prescriptions' %}class="active"{% endif %}>Prescription Queue</a>
+
                 {% elif request.user.staff.role == 'CASHIER' %}
-                    <a href="{% url 'auth_app:profile' %}" {% if active_nav == 'profile' %}class="active"{% endif %}>Profile</a>
+                    <a href="{% url 'billing_app:cashier_dashboard' %}" {% if active_nav == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
                     <a href="{% url 'billing_app:process_payment' %}" {% if active_nav == 'payment' %}class="active"{% endif %}>Payment Entry</a>
-                {% else %}
-                    <a href="{% url 'auth_app:profile' %}" {% if active_nav == 'profile' %}class="active"{% endif %}>Profile</a>
+                {% endif %}
+
+                {% if request.user.is_superuser %}
+                    <a href="{% url 'admin:index' %}">Django Admin</a>
                 {% endif %}
             </nav>
         {% endif %}
@@ -47,7 +78,7 @@ MediCore site header. Navigasi kontekstual ditampilkan berdasarkan role user:
 
     <div class="topbar-right">
         {% if request.user.is_authenticated %}
-            <a class="topbar-user-pill" href="{% url 'auth_app:profile' %}">
+            <a class="topbar-user-pill" href="{% url 'auth_app:profile' %}" title="View profile">
                 <span class="avatar" aria-hidden="true">{{ request.user.username|slice:":2" }}</span>
                 <span class="topbar-username">{{ request.user.username }}</span>
             </a>
@@ -63,7 +94,7 @@ MediCore site header. Navigasi kontekstual ditampilkan berdasarkan role user:
                 </button>
             </form>
         {% else %}
-            <a class="btn btn-sm btn-secondary" style="color:rgba(255,255,255,0.85); border-color:rgba(255,255,255,0.2);" href="{% url 'auth_app:login' %}">Sign In</a>
+            <a class="topbar-signin" href="{% url 'auth_app:login' %}">Sign In</a>
         {% endif %}
     </div>
 </header>

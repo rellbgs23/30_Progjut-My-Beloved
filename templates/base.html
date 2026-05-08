@@ -36,7 +36,10 @@
             {% if messages %}
                 <div class="messages" role="alert" aria-live="polite">
                     {% for message in messages %}
-                        <p class="{{ message.tags|default:'info' }}">{{ message }}</p>
+                        {# level_tag selalu berisi success/info/warning/error/debug,
+                           beda dengan `tags` yang bisa kosong. Memakai level_tag
+                           menghindari kasus 'pesan sukses tampil merah'. #}
+                        <p class="{{ message.level_tag }}">{{ message }}</p>
                     {% endfor %}
                 </div>
             {% endif %}

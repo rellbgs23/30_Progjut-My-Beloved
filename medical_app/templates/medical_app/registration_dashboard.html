@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Registration Dashboard — MediCore{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Registration Dashboard</h1>
+            <p class="page-subtitle">Hospital front desk overview.</p>
+        </div>
+        <a class="btn btn-primary" href="{% url 'medical_app:appointment_create' %}">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            New Appointment
+        </a>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                </svg>
+            </div>
+            <div class="stat-label">Today&apos;s Appointments</div>
+            <div class="stat-value">{{ todays_appointments|length }}</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+            <div class="stat-label">Upcoming (Scheduled)</div>
+            <div class="stat-value">{{ upcoming_count }}</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                </svg>
+            </div>
+            <div class="stat-label">Registered Patients</div>
+            <div class="stat-value">{{ total_patients }}</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-label">
+            <div class="card-label-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+            </div>
+            <span class="card-label-text">Today&apos;s Schedule</span>
+        </div>
+
+        <ul class="mc-list">
+            {% for appointment in todays_appointments %}
+                <li class="mc-list-item">
+                    <div>
+                        <div class="primary">
+                            {{ appointment.scheduledAt|date:"H:i" }} &mdash;
+                            {{ appointment.patient.name }}
+                        </div>
+                        <div class="secondary">
+                            Dr. {{ appointment.doctor.name }} &middot;
+                            {{ appointment.get_status_display }}
+                        </div>
+                    </div>
+                    <a class="btn btn-secondary btn-sm" href="{% url 'medical_app:appointment_detail' appointment.id %}">
+                        Details
+                    </a>
+                </li>
+            {% empty %}
+                <li class="mc-list-empty">No appointments today.</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

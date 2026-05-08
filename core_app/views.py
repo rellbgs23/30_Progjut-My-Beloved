@@ -10,6 +10,7 @@ Semua view di sini:
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from billing_app.models import Invoice
@@ -40,7 +41,7 @@ def _denied(request):
 def home(request):
     """Entry point sederhana — arahkan user ke tempat yang sesuai.
 
-    Patient -> dashboard-nya, staff -> profile, anon -> login.
+    Patient -> dashboard-nya, staff -> halaman sesuai role, anon -> login.
     Ini memastikan URL "/" atau "/patient/" tidak pernah 404, dan
     setiap role melihat halaman yang relevan untuk mereka.
     """
@@ -50,7 +51,50 @@ def home(request):
         return redirect("auth_app:login")
     if getattr(user, "is_patient", False):
         return redirect("core_app:patient_dashboard")
+
+    staff = getattr(user, "staff", None)
+    if staff is not None:
+        if staff.role == "DOCTOR":
+            return redirect("medical_app:doctor_dashboard")
+        if staff.role == "PHARMACIST":
+            return redirect("pharmacy_app:prescription_list")
+        if staff.role == "CASHIER":
+            return redirect("billing_app:cashier_dashboard")
+        if staff.role == "REGISTRATION":
+            return redirect("medical_app:registration_dashboard")
+
+    if user.is_superuser:
+        return redirect("admin:index")
+
     return redirect("auth_app:profile")
+
+
+# ---------------------------------------------------------------------------
+# Error handlers (404/403/500)
+#
+# Django memanggil fungsi-fungsi ini untuk error page saat DEBUG=False.
+# Kita render template bermerek MediCore alih-alih halaman default yang
+# polos agar UX saat salah URL / izin kurang / crash server tetap
+# terhubung dengan brand sisa aplikasi.
+# ---------------------------------------------------------------------------
+
+
+def page_not_found(request, exception=None):
+    return render(request, "errors/404.html", status=404)
+
+
+def permission_denied(request, exception=None):
+    return render(request, "errors/403.html", status=403)
+
+
+def server_error(request):
+    # Render tanpa context processors: beberapa di antaranya butuh DB
+    # akses yang bisa jadi sumber error awal. Render minimal supaya
+    # template 500 TIDAK memicu 500 lain.
+    from django.template import loader
+
+    template = loader.get_template("errors/500.html")
+    return HttpResponse(template.render({}, request), status=500)
 
 
 def self_register(request):

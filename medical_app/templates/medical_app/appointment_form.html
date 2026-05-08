@@ -4,7 +4,9 @@
 
 {% block breadcrumb %}
     <nav class="breadcrumb" aria-label="Breadcrumb">
-        <span>Appointments</span>
+        <a href="{% url 'medical_app:registration_dashboard' %}">Dashboard</a>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <a href="{% url 'medical_app:registration_appointments' %}">All Appointments</a>
         <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
         <span>New</span>
     </nav>
@@ -16,7 +18,7 @@
     <div class="page-header">
         <div>
             <h1 class="page-title">Create Appointment</h1>
-            <p class="page-subtitle">Schedule a new patient visit</p>
+            <p class="page-subtitle">Schedule a new patient visit.</p>
         </div>
     </div>
 
@@ -31,14 +33,51 @@
         <form method="post" class="mc-form" novalidate>
             {% csrf_token %}
             <div class="form-body">
-                {{ form.as_p }}
+                <p>
+                    <label for="patient_id">Patient</label>
+                    <select id="patient_id" name="patient_id" required>
+                        <option value="">— Select patient —</option>
+                        {% for patient in patients %}
+                            <option value="{{ patient.id }}"
+                                {% if form.patient_id.value == patient.id|stringformat:'s' %}selected{% endif %}>
+                                {{ patient.name }} ({{ patient.mrn }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </p>
+
+                <p>
+                    <label for="doctor_id">Doctor</label>
+                    <select id="doctor_id" name="doctor_id" required>
+                        <option value="">— Select doctor —</option>
+                        {% for doctor in doctors %}
+                            <option value="{{ doctor.id }}"
+                                {% if form.doctor_id.value == doctor.id|stringformat:'s' %}selected{% endif %}>
+                                Dr. {{ doctor.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </p>
+
+                <p>
+                    <label for="scheduledAt">Scheduled at</label>
+                    <input type="datetime-local" id="scheduledAt" name="scheduledAt"
+                           value="{{ form.scheduledAt.value|default:'' }}" required>
+                </p>
+
+                <p>
+                    <label for="reason">Reason for visit</label>
+                    <input type="text" id="reason" name="reason"
+                           value="{{ form.reason.value|default:'' }}"
+                           maxlength="255" required>
+                </p>
             </div>
             <div class="form-footer">
                 <button type="submit" class="btn btn-primary">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
                     Create Appointment
                 </button>
-                <a class="btn btn-secondary" href="{% url 'auth_app:profile' %}">Cancel</a>
+                <a class="btn btn-secondary" href="{% url 'medical_app:registration_appointments' %}">Cancel</a>
             </div>
         </form>
     </div>

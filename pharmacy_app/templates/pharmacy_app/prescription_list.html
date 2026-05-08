@@ -2,50 +2,109 @@
 
 {% block title %}Prescription Queue — MediCore{% endblock %}
 
-{% block breadcrumb %}
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-        <span>Pharmacy</span>
-        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-        <span>Prescription Queue</span>
-    </nav>
-{% endblock %}
-
 {% block content %}
     <div class="page-header">
         <div>
             <h1 class="page-title">Prescription Queue</h1>
-            <p class="page-subtitle">Prescriptions awaiting pharmacist verification</p>
+            <p class="page-subtitle">Prescriptions awaiting pharmacist verification or dispensing.</p>
         </div>
     </div>
 
-    <div class="card">
-        {% if prescriptions %}
-            <ul class="mc-list">
-                {% for prescription in prescriptions %}
-                    <li class="mc-list-item">
-                        <div>
-                            <div class="primary">{{ prescription.encounter.patient.name }}</div>
-                            <div class="secondary">
-                                Issued by Dr. {{ prescription.encounter.staff.name }}
-                                &middot;
-                                {{ prescription.items.count }} item{{ prescription.items.count|pluralize }}
-                                &middot;
-                                {{ prescription.encounter.dateTime|date:"d M Y H:i" }}
-                            </div>
-                        </div>
-                        <a class="btn btn-primary btn-sm" href="{% url 'pharmacy_app:prescription_detail' prescription.id %}">
-                            View Detail
-                        </a>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <div class="mc-list-empty">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M3 7h18M3 12h18M3 17h18"/>
+    <div class="stats-grid">
+        <div class="stat">
+            <div class="stat-icon icon-amber" style="background:var(--amber-pale);">
+                <svg viewBox="0 0 24 24" stroke="var(--amber)">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
                 </svg>
-                <div>No prescriptions in the queue</div>
             </div>
-        {% endif %}
+            <div class="stat-label">Pending Validation</div>
+            <div class="stat-value">{{ pending_count }}</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            <div class="stat-label">Ready to Dispense</div>
+            <div class="stat-value">{{ validated_count }}</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 7L10 17l-5-5"/>
+                </svg>
+            </div>
+            <div class="stat-label">Dispensed</div>
+            <div class="stat-value">{{ dispensed_count }}</div>
+        </div>
+    </div>
+
+    <div class="card accent-amber">
+        <div class="card-label">
+            <div class="card-label-icon icon-amber" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+            <span class="card-label-text">Pending Validation</span>
+        </div>
+        <ul class="mc-list">
+            {% for prescription in pending %}
+                <li class="mc-list-item">
+                    <div>
+                        <div class="primary">{{ prescription.encounter.patient.name }}</div>
+                        <div class="secondary">
+                            Dr. {{ prescription.encounter.staff.name }}
+                            &middot;
+                            {{ prescription.items.count }} item{{ prescription.items.count|pluralize }}
+                            &middot;
+                            {{ prescription.encounter.dateTime|date:"d M Y H:i" }}
+                        </div>
+                    </div>
+                    <a class="btn btn-amber btn-sm" href="{% url 'pharmacy_app:prescription_detail' prescription.id %}">
+                        Review
+                    </a>
+                </li>
+            {% empty %}
+                <li class="mc-list-empty">No prescriptions waiting for validation.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="card accent-teal">
+        <div class="card-label">
+            <div class="card-label-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            <span class="card-label-text">Ready to Dispense</span>
+        </div>
+        <ul class="mc-list">
+            {% for prescription in validated %}
+                <li class="mc-list-item">
+                    <div>
+                        <div class="primary">{{ prescription.encounter.patient.name }}</div>
+                        <div class="secondary">
+                            Validated {{ prescription.validatedAt|date:"d M Y H:i" }}
+                            &middot;
+                            {{ prescription.items.count }} item{{ prescription.items.count|pluralize }}
+                        </div>
+                    </div>
+                    <a class="btn btn-green btn-sm" href="{% url 'pharmacy_app:dispense_medicine' prescription.id %}">
+                        Dispense
+                    </a>
+                </li>
+            {% empty %}
+                <li class="mc-list-empty">Nothing ready to dispense yet.</li>
+            {% endfor %}
+        </ul>
     </div>
 {% endblock %}

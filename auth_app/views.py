@@ -90,8 +90,21 @@ def login_view(request):
             login(request, user)
             request.session.set_expiry(0)  # gunakan SESSION_COOKIE_AGE default
 
+            messages.success(request, f"Selamat datang, {user.username}.")
+
             if user.is_patient:
                 return redirect("core_app:patient_dashboard")
+
+            if hasattr(user, "staff"):
+                role = user.staff.role
+                if role == "DOCTOR":
+                    return redirect("medical_app:doctor_dashboard")
+                if role == "PHARMACIST":
+                    return redirect("pharmacy_app:prescription_list")
+                if role == "CASHIER":
+                    return redirect("billing_app:cashier_dashboard")
+                if role == "REGISTRATION":
+                    return redirect("medical_app:registration_dashboard")
 
             return redirect("auth_app:profile")
 

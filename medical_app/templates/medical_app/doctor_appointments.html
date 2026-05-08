@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}My Appointments — MediCore{% endblock %}
+
+{% block breadcrumb %}
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'medical_app:doctor_dashboard' %}">Dashboard</a>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>My Appointments</span>
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">My Appointments</h1>
+            <p class="page-subtitle">Every appointment assigned to you.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <ul class="mc-list">
+            {% for appointment in appointments %}
+                <li class="mc-list-item">
+                    <div>
+                        <div class="primary">{{ appointment.scheduledAt|date:"l, d M Y H:i" }}</div>
+                        <div class="secondary">
+                            {{ appointment.patient.name }} &middot;
+                            MRN {{ appointment.patient.mrn }} &middot;
+                            {% if appointment.status == "SCHEDULED" %}
+                                <span class="badge badge-indigo"><span class="badge-dot"></span>Scheduled</span>
+                            {% elif appointment.status == "COMPLETED" %}
+                                <span class="badge badge-green"><span class="badge-dot"></span>Completed</span>
+                            {% elif appointment.status == "CANCELLED" %}
+                                <span class="badge badge-rose"><span class="badge-dot"></span>Cancelled</span>
+                            {% else %}
+                                <span class="badge badge-muted"><span class="badge-dot"></span>{{ appointment.status }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="flex-row">
+                        {% if appointment.status == "SCHEDULED" %}
+                            <a class="btn btn-primary btn-sm" href="{% url 'medical_app:encounter_create' appointment.id %}">Start</a>
+                        {% endif %}
+                        <a class="btn btn-secondary btn-sm" href="{% url 'medical_app:appointment_detail' appointment.id %}">Details</a>
+                    </div>
+                </li>
+            {% empty %}
+                <li class="mc-list-empty">No appointments.</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}
