@@ -28,6 +28,12 @@ class Invoice(models.Model):
         max_length=20, choices=InvoiceStatus.choices, default=InvoiceStatus.UNPAID)
     createdAt = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def remaining_balance(self):
+        total_paid = sum(
+            (p.paidAmount for p in self.payment_set.all()), Decimal('0.00'))
+        return self.totalAmount - total_paid
+
     def clean(self):
         super().clean()
 
@@ -140,8 +146,10 @@ class AuditLog(models.Model):
         SIG_FAIL = 'SIG_FAIL', 'Signature Verification Failed'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    payment = models.ForeignKey(Payment, on_delete=models.RESTRICT, null=True, blank=True)
-    actor = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True)
+    payment = models.ForeignKey(
+        Payment, on_delete=models.RESTRICT, null=True, blank=True)
+    actor = models.ForeignKey(
+        Staff, on_delete=models.SET_NULL, null=True, blank=True)
     entityType = models.CharField(max_length=50, blank=True)
     entityId = models.CharField(max_length=64, blank=True)
     detail = models.JSONField(default=dict, blank=True)

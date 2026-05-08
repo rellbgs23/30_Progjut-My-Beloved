@@ -51,6 +51,8 @@ INSTALLED_APPS = [
 # Custom user model
 AUTH_USER_MODEL = 'auth_app.UserAccount'
 
+LOGIN_URL = 'auth_app:login'
+
 # Konfigurasi keamanan tambahan 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 1800 # Session expired setelah 30 menit

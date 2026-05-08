@@ -1,81 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Daftar Tagihan — MediCore HIS</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
     <style>
-        :root {
-            --navy: #0b1f3a; --teal: #0d7377; --surface: #f8fafb; 
-            --muted: #7a8a9a; --text: #1a2a3a; --border: #edf1f5;
-        }
-        body { font-family: 'DM Sans', sans-serif; background-color: var(--surface); color: var(--text); padding: 40px; margin: 0; }
-        .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(11,31,58,0.04); }
-        h2 { color: var(--navy); margin-top: 0; margin-bottom: 20px; }
-        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        input, select, button, .btn-secondary { padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); font-family: inherit; font-size: 0.95rem; }
-        input { flex-grow: 1; max-width: 400px; }
-        button.btn-primary { background: var(--teal); color: white; border: none; cursor: pointer; font-weight: 500; }
-        .btn-secondary { background: white; color: var(--navy); text-decoration: none; display: inline-block; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border); }
-        th { background: var(--surface); color: var(--navy); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; }
-        .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
-        .badge-unpaid { background: #fee2e2; color: #b91c1c; }
-        .badge-paid { background: #d1fae5; color: #047857; }
-        .action-link { background: var(--navy); color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+      :root {
+        --navy: #0b1f3a;
+        --teal: #0d7377;
+        --surface: #f8fafb;
+        --muted: #7a8a9a;
+        --text: #1a2a3a;
+        --border: #edf1f5;
+      }
+      body {
+        font-family: 'DM Sans', sans-serif;
+        background-color: var(--surface);
+        color: var(--text);
+        padding: 40px;
+        margin: 0;
+      }
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(11, 31, 58, 0.04);
+      }
+      h2 {
+        color: var(--navy);
+        margin-top: 0;
+        margin-bottom: 20px;
+      }
+      .filter-bar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      input,
+      select,
+      button,
+      .btn-secondary {
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        font-family: inherit;
+        font-size: 0.95rem;
+      }
+      input {
+        flex-grow: 1;
+        max-width: 400px;
+      }
+      button.btn-primary {
+        background: var(--teal);
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+      }
+      .btn-secondary {
+        background: white;
+        color: var(--navy);
+        text-decoration: none;
+        display: inline-block;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      th,
+      td {
+        padding: 14px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+      th {
+        background: var(--surface);
+        color: var(--navy);
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+      }
+      .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+      .badge-unpaid {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+      .badge-paid {
+        background: #d1fae5;
+        color: #047857;
+      }
+      .action-link {
+        background: var(--navy);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2>Daftar Tagihan Kasir</h2>
-            <a href="/" style="color: var(--muted); text-decoration: none;">&larr; Back to Home</a>
-        </div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Daftar Tagihan Kasir</h2>
+        <a href="/" style="color: var(--muted); text-decoration: none;">&larr; Back to Home</a>
+      </div>
 
-        <form method="GET" class="filter-bar">
-            <input type="text" name="q" value="{{ query }}" placeholder="Cari ID Invoice, MRN, atau Nama...">
-            <select name="status">
-                <option value="UNPAID" {% if current_status == 'UNPAID' %}selected{% endif %}>Menunggu (UNPAID)</option>
-                <option value="PAID" {% if current_status == 'PAID' %}selected{% endif %}>Lunas (PAID)</option>
-                <option value="ALL" {% if current_status == 'ALL' %}selected{% endif %}>Semua Status</option>
-            </select>
-            <button type="submit" class="btn-primary">Terapkan Filter</button>
-            <a href="{% url 'billing_app:invoice_list' %}" class="btn-secondary">Reset</a>
-        </form>
+      <form method="GET" class="filter-bar">
+        <input type="text" name="q" value="{{ query }}" placeholder="Cari ID Invoice, MRN, atau Nama..." />
+        <select name="status">
+          {% if current_status == 'UNPAID' %}
+            <option value="UNPAID" selected>Menunggu (UNPAID)</option>
+          {% else %}
+            <option value="UNPAID">Menunggu (UNPAID)</option>
+          {% endif %}
 
-        <table>
-            <thead>
-                <tr>
-                    <th>ID Invoice</th>
-                    <th>Pasien</th>
-                    <th>Waktu Dibuat</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for inv in invoices %}
-                <tr>
-                    <td style="font-family: monospace; color: var(--muted);">{{ inv.id|truncatechars:13 }}</td>
-                    <td><strong>{{ inv.encounter.patient.name }}</strong><br><small style="color: var(--muted);">{{ inv.encounter.patient.mrn }}</small></td>
-                    <td>{{ inv.createdAt|date:"d M Y, H:i" }}</td>
-                    <td style="font-weight: 500;">Rp {{ inv.totalAmount }}</td>
-                    <td>
-                        <span class="badge {% if inv.status == 'PAID' %}badge-paid{% else %}badge-unpaid{% endif %}">
-                            {{ inv.status }}
-                        </span>
-                    </td>
-                    <td>
-                        <a href="{% url 'billing_app:invoice_pay' inv.id %}" class="action-link">Detail</a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 30px;">Tidak ada tagihan ditemukan.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+          {% if current_status == 'PAID' %}
+            <option value="PAID" selected>Lunas (PAID)</option>
+          {% else %}
+            <option value="PAID">Lunas (PAID)</option>
+          {% endif %}
+
+          {% if current_status == 'ALL' %}
+            <option value="ALL" selected>Semua Status</option>
+          {% else %}
+            <option value="ALL">Semua Status</option>
+          {% endif %}
+        </select>
+        <button type="submit" class="btn-primary">Terapkan Filter</button>
+        <a href="{% url 'billing_app:invoice_list' %}" class="btn-secondary">Reset</a>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID Invoice</th>
+            <th>Pasien</th>
+            <th>Waktu Dibuat</th>
+            <th>Total</th>
+            <th>Sisa Bayar</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inv in invoices %}
+            <tr>
+              <td style="font-family: monospace; color: var(--muted);">{{ inv.id|truncatechars:13 }}</td>
+              <td>
+                <strong>{{ inv.encounter.patient.name }}</strong><br /><small style="color: var(--muted);">{{ inv.encounter.patient.mrn }}</small>
+              </td>
+              <td>{{ inv.createdAt|date:'d M Y, H:i' }}</td>
+              <td style="font-weight: 500;">Rp {{ inv.totalAmount }}</td>
+
+              <td style="font-weight: 600; color: #b91c1c;">
+                {% if inv.status == 'PAID' %}
+                  <span style="color: #047857;">Rp 0.00</span>
+                {% else %}
+                  Rp {{ inv.remaining_balance }}
+                {% endif %}
+              </td>
+
+              <td>
+                <span class="badge {% if inv.status == 'PAID' %}
+                    badge-paid
+                  {% else %}
+                    badge-unpaid
+                  {% endif %}">
+                  {{ inv.status }}
+                </span>
+              </td>
+              <td>
+                <a href="{% url 'billing_app:invoice_pay' inv.id %}" class="action-link">Detail</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--muted); padding: 30px;">Tidak ada tagihan ditemukan.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-</body>
+  </body>
 </html>

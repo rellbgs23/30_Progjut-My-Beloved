@@ -16,18 +16,14 @@ def is_cashier(user):
 @user_passes_test(is_cashier, login_url='/auth/denied/')
 def invoice_list(request):
     query = request.GET.get('q', '')
-    # Default nampilin UNPAID sesuai request lu
     status_filter = request.GET.get('status', 'UNPAID')
 
-    # Sort by time (-createdAt) default dari backend
-    invoices = Invoice.objects.select_related(
-        'encounter__patient').all().order_by('-createdAt')
+    invoices = Invoice.objects.select_related('encounter__patient').prefetch_related(
+        'payment_set').all().order_by('-createdAt')
 
-    # Filter by Status
     if status_filter in ['UNPAID', 'PAID']:
         invoices = invoices.filter(status=status_filter)
 
-    # Filter by Search Query
     if query:
         invoices = invoices.filter(
             Q(id__icontains=query) |
