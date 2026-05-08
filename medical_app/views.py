@@ -88,6 +88,16 @@ def create_medical_record(request, encounter_id):
     if encounter.staff_id != staff.id:
         return HttpResponseForbidden("You can only write records for your own encounter.")
 
+    # Cegah pembuatan dua MedicalRecordEntry untuk encounter yang sama.
+    # Jika ingin mengubah record, harus lewat flow edit/amend terpisah
+    # (yang belum diimplementasi) untuk menjaga audit trail.
+    existing_record = MedicalRecordEntry.objects.filter(encounter=encounter).first()
+    if existing_record is not None:
+        messages.info(request, "Medical record untuk encounter ini sudah ada.")
+        return redirect(
+            "medical_app:medical_record_detail", record_id=existing_record.id
+        )
+
     if request.method == "POST":
         form = MedicalRecordEntryForm(request.POST)
 

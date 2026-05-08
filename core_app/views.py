@@ -103,6 +103,25 @@ def patient_appointments(request):
 
 
 @login_required
+def patient_appointment_detail(request, appointment_id):
+	patient, error_response = _get_patient_or_forbidden(request)
+	if error_response:
+		return error_response
+
+	appointment = get_object_or_404(
+		Appointment.objects.select_related("doctor"),
+		id=appointment_id,
+		patient=patient,
+	)
+
+	return render(
+		request,
+		"medical_app/appointment_detail.html",
+		{"appointment": appointment},
+	)
+
+
+@login_required
 def patient_encounter_list(request):
 	patient, error_response = _get_patient_or_forbidden(request)
 	if error_response:

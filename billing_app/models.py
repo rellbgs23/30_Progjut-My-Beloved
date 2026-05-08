@@ -1,7 +1,8 @@
 import uuid
 import hashlib
+import json
 from decimal import Decimal
-from django.db import models
+from django.db import models, transaction
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from auth_app.models import Staff
@@ -148,16 +149,50 @@ class AuditLog(models.Model):
     # Cryptographic Log Integrity
     hash = models.CharField(max_length=64, editable=False)
 
+    class Meta:
+        # Query "log terakhir" harus pakai primary key (monotonic),
+        # bukan timestamp — dua log yang disimpan dalam satu detik
+        # bisa punya timestamp identik dan membuat ordering non-deterministik
+        # sehingga hash chain bisa bercabang.
+        ordering = ["-timestamp", "-id"]
+
     def save(self, *args, **kwargs):
         if not self.hash:
-            last_log = AuditLog.objects.order_by('-timestamp').first()
-            previous_hash = last_log.hash if last_log else "GENESIS_BLOCK"
-            data_to_hash = (
-                f"{self.action}|{self.payment_id or ''}|{self.actor_id or ''}|"
-                f"{self.entityType}|{self.entityId}|{self.detail}|{previous_hash}"
-            ).encode('utf-8')
-            self.hash = hashlib.sha256(data_to_hash).hexdigest()
-        super().save(*args, **kwargs)
+            # Bangun chain secara atomik: lock tabel pada baris terakhir
+            # agar dua INSERT bersamaan tidak membaca previous_hash yang
+            # sama dan menghasilkan dua log dengan parent yang identik.
+            with transaction.atomic():
+                last_log = (
+                    AuditLog.objects.select_for_update()
+                    .order_by("-timestamp", "-id")
+                    .first()
+                )
+                previous_hash = last_log.hash if last_log else "GENESIS_BLOCK"
+
+                # Serialisasi `detail` secara deterministik (JSON dengan
+                # sort_keys=True) supaya dict yang sama selalu menghasilkan
+                # byte-representation yang sama di seluruh versi Python/OS.
+                detail_canonical = json.dumps(
+                    self.detail or {},
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    default=str,
+                )
+
+                data_to_hash = "|".join([
+                    str(self.action),
+                    str(self.payment_id or ""),
+                    str(self.actor_id or ""),
+                    str(self.entityType or ""),
+                    str(self.entityId or ""),
+                    detail_canonical,
+                    previous_hash,
+                ]).encode("utf-8")
+
+                self.hash = hashlib.sha256(data_to_hash).hexdigest()
+                super().save(*args, **kwargs)
+        else:
+            super().save(*args, **kwargs)
 
     @classmethod
     def record_action(cls, action, actor=None, payment=None, prescription=None, detail=None):

@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -7,6 +8,11 @@ from .models import UserAccount, Staff
 
 class AuthSecurityTests(TestCase):
     def setUp(self):
+        # Rate-limit pada login_view memakai default LocMemCache yang
+        # state-nya persist antar test dalam satu proses. Kita reset
+        # supaya counter per-IP/per-username tidak bocor ke test lain.
+        cache.clear()
+
         self.user = UserAccount.objects.create_user(
             username="doctor1",
             password="StrongPassword123!",

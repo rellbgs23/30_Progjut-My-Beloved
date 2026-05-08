@@ -25,6 +25,19 @@ class SelfRegistrationForm(forms.Form):
     address = forms.CharField(max_length=255)
     phone_number = forms.CharField(max_length=30)
 
+    def clean_username(self):
+        value = self.cleaned_data["username"].strip()
+        if UserAccount.objects.filter(username__iexact=value).exists():
+            raise ValidationError("Username sudah digunakan.")
+        return value
+
+    def clean_email(self):
+        value = self.cleaned_data["email"].strip().lower()
+        # email case-insensitive check untuk mencegah duplikasi via casing.
+        if UserAccount.objects.filter(email__iexact=value).exists():
+            raise ValidationError("Email sudah terdaftar.")
+        return value
+
     def clean_full_name(self):
         value = self.cleaned_data["full_name"].strip()
         if not PROFILE_NAME_REGEX.fullmatch(value):
@@ -52,8 +65,15 @@ class SelfRegistrationForm(forms.Form):
             self.add_error("confirm_password", "Konfirmasi password tidak cocok.")
 
         if password:
+            # Bangun kandidat user supaya UserAttributeSimilarityValidator
+            # bisa membandingkan password dengan username/email/full_name.
+            candidate = UserAccount(
+                username=cleaned_data.get("username") or "",
+                email=cleaned_data.get("email") or "",
+                first_name=cleaned_data.get("full_name") or "",
+            )
             try:
-                validate_password(password)
+                validate_password(password, user=candidate)
             except ValidationError as error:
                 self.add_error("password", error)
 
