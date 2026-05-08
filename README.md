@@ -70,22 +70,38 @@ Ikuti langkah-langkah berikut untuk melakukan setup proyek di mesin lokal Anda:
 > TODO: ...
 
 ### 1. Code Injection Prevention
-* **Penjelasan Vulnerability:** [TODO: Penjelasan vulnerability yang dimitigasi (referensi ke CWE yang relevan)]
+
+* **Penjelasan Vulnerability:** 
+Code Injection terjadi ketika app mengeksekusi kode yang berasal dari input user tanpa validasi. Attacker bisa inject kode yang berbahaya (Python, SQL, template expression) untuk merusak aplikasi.
+
 * **Code Snippet Perbandingan:** [TODO: Snippet kode sebelum (vulnerable) dan sesudah (secure) sebagai perbandingan]
 * **Teknik Mitigasi:** [TODO: Penjelasan teknik mitigasi yang digunakan]
 
 ### 2. Broken Authentication Mitigation
-* **Penjelasan Vulnerability:** [TODO: Penjelasan vulnerability yang dimitigasi (referensi ke CWE yang relevan)]
+
+* **Penjelasan Vulnerability:** 
+Broken Authentication memungkinkan attacker untuk mendapatkan akses tanpa kredensial yang sah. Ini termasuk:
+- Password disimpan plaintext atau hash lemah
+- Session token yang predictable atau tidak di-invalidate
+- Tidak ada rate limiting pada login attempts
+- Tidak ada pembedaan privilege antar role
+
 * **Code Snippet Perbandingan:** [TODO: Snippet kode sebelum (vulnerable) dan sesudah (secure) sebagai perbandingan]
 * **Teknik Mitigasi:** [TODO: Penjelasan teknik mitigasi yang digunakan]
 
 ### 3. CSRF Protection
-* **Penjelasan Vulnerability:** [TODO: Penjelasan vulnerability yang dimitigasi (referensi ke CWE yang relevan)]
+
+* **Penjelasan Vulnerability:** 
+CSRF attack memungkinkan attacker mengirim request yang tidak sah atas nama user yang authenticated. Contoh: user login ke bank, kemudian mengklik link jahat yang melakukan transfer dana tanpa persetujuan.
+
 * **Code Snippet Perbandingan:** [TODO: Snippet kode sebelum (vulnerable) dan sesudah (secure) sebagai perbandingan]
 * **Teknik Mitigasi:** [TODO: Penjelasan teknik mitigasi yang digunakan]
 
 ### 4. SQL Injection Prevention
-* **Penjelasan Vulnerability:** [TODO: Penjelasan vulnerability yang dimitigasi (referensi ke CWE yang relevan)]
+
+* **Penjelasan Vulnerability:** 
+SQL Injection terjadi ketika user input digunakan langsung dalam SQL query tanpa sanitasi. Attacker bisa memanipulasi query untuk mengakses/mengubah/menghapus data tanpa authorization.
+
 * **Code Snippet Perbandingan:** [TODO: Snippet kode sebelum (vulnerable) dan sesudah (secure) sebagai perbandingan]
 * **Teknik Mitigasi:** [TODO: Penjelasan teknik mitigasi yang digunakan]
 
