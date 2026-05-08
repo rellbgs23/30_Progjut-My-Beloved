@@ -50,7 +50,7 @@ def login_view(request):
             if user.is_patient:
                 return redirect("core_app:patient_dashboard")
 
-            return redirect("auth_app:profile")
+            return redirect("landing_page")
 
     else:
         form = SecureLoginForm()
