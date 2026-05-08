@@ -1,21 +1,16 @@
 """Role/permission decorators untuk view staff.
 
-Kedua decorator di sini merender halaman denied dengan HTTP 403. Kita
-memilih render halaman alih-alih mengembalikan raw `HttpResponseForbidden`
-plaintext supaya UX konsisten (tetap ada branding, nav, dan tombol logout),
-tapi tetap pakai status 403 supaya test keamanan dan tooling monitoring
-dapat membedakan access-denied dari 200/302.
+Keduanya MENGALIHKAN user ke halaman home dengan flash error, alih-alih
+mengembalikan raw `HttpResponseForbidden` plaintext atau halaman denied
+statis. Implementasi dipusatkan di `auth_app.helpers.deny_access`.
+
+Catatan: user anonymous tetap di-redirect ke login, sesuai TC-BA-04.
 """
 
 from functools import wraps
 
-from django.shortcuts import render
-
+from .helpers import deny_access
 from .models import Staff
-
-
-def _forbidden(request):
-    return render(request, "auth_app/denied.html", status=403)
 
 
 def staff_required(view_func):
@@ -24,11 +19,11 @@ def staff_required(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return _forbidden(request)
+            return deny_access(request)
         try:
             request.user.staff
         except Staff.DoesNotExist:
-            return _forbidden(request)
+            return deny_access(request, "Halaman ini hanya untuk staff.")
         return view_func(request, *args, **kwargs)
 
     return wrapper
@@ -41,15 +36,20 @@ def staff_role_required(*allowed_roles):
         @wraps(view_func)
         def wrapper(request, *args, **kwargs):
             if not request.user.is_authenticated:
-                return _forbidden(request)
+                return deny_access(request)
 
             try:
                 staff = request.user.staff
             except Staff.DoesNotExist:
-                return _forbidden(request)
+                return deny_access(
+                    request, "Akun ini belum punya profil staff."
+                )
 
             if staff.role not in allowed_roles:
-                return _forbidden(request)
+                return deny_access(
+                    request,
+                    "Role Anda tidak memiliki akses ke halaman tersebut.",
+                )
 
             return view_func(request, *args, **kwargs)
 

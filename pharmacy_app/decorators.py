@@ -4,17 +4,16 @@ Berbeda dari auth_app.decorators, decorator di sini juga MEREKAM kegagalan
 role/MFA ke AuditLog. Ini adalah kontrol compliance — audit trail harus
 memperlihatkan siapa yang mencoba akses endpoint sensitif meskipun aksi
 tersebut ditolak.
+
+Perilaku respon: seperti auth_app, akses ditolak -> redirect ke home
+(kalau sudah login) atau ke login (kalau anon) via
+`auth_app.helpers.deny_access`.
 """
 
 from functools import wraps
 
-from django.shortcuts import render
-
+from auth_app.helpers import deny_access
 from auth_app.models import Staff
-
-
-def _forbidden(request):
-    return render(request, "auth_app/denied.html", status=403)
 
 
 def pharmacist_required(view_func):
@@ -25,7 +24,7 @@ def pharmacist_required(view_func):
         from billing_app.models import AuditLog
 
         if not request.user.is_authenticated:
-            return _forbidden(request)
+            return deny_access(request)
 
         try:
             staff = request.user.staff
@@ -34,7 +33,9 @@ def pharmacist_required(view_func):
                 action=AuditLog.Action.ROLE_FAIL,
                 detail={"reason": "Missing staff profile"},
             )
-            return _forbidden(request)
+            return deny_access(
+                request, "Akun ini belum punya profil staff."
+            )
 
         if staff.role != "PHARMACIST":
             AuditLog.record_action(
@@ -42,7 +43,9 @@ def pharmacist_required(view_func):
                 actor=staff,
                 detail={"requiredRole": "PHARMACIST", "actualRole": staff.role},
             )
-            return _forbidden(request)
+            return deny_access(
+                request, "Halaman apoteker hanya untuk role PHARMACIST."
+            )
 
         return view_func(request, *args, **kwargs)
 
@@ -55,7 +58,7 @@ def mfa_required(view_func):
         from billing_app.models import AuditLog
 
         if not request.user.is_authenticated:
-            return _forbidden(request)
+            return deny_access(request)
 
         try:
             actor = request.user.staff
@@ -68,7 +71,10 @@ def mfa_required(view_func):
                 actor=actor,
                 detail={"reason": "MFA is not enabled"},
             )
-            return _forbidden(request)
+            return deny_access(
+                request,
+                "Aksi ini membutuhkan MFA aktif. Hubungi admin.",
+            )
 
         return view_func(request, *args, **kwargs)
 

@@ -145,6 +145,37 @@ DJANGO_SECRET_KEY=... DEBUG=False DJANGO_ALLOWED_HOSTS=example.com \
     python manage.py check --deploy
 ```
 
+### Peta Test Case Keamanan
+
+Modul `tests_security/` berisi test acceptance yang memetakan langsung
+ke daftar TC PKPL. Status: **27/27 PASS**.
+
+| TC-ID         | Kategori           | Test Class                                        |
+|---------------|-------------------|---------------------------------------------------|
+| TC-SQLi-01    | SQL Injection     | `TC_SQLi_01_LoginBypass`                          |
+| TC-SQLi-02    | SQL Injection     | `TC_SQLi_02_UnionSearch`                          |
+| TC-SQLi-03    | SQL Injection     | `TC_SQLi_03_ParameterizedQueriesWhiteBox`         |
+| TC-CI-01      | XSS               | `TC_CI_01_ScriptTagInjection`                     |
+| TC-CI-02      | HTML Injection    | `TC_CI_02_HtmlInjection`                          |
+| TC-CI-03      | SSTI              | `TC_CI_03_ServerSideTemplateInjection`            |
+| TC-BA-01      | Broken Auth       | `TC_BA_01_PasswordHashing`                        |
+| TC-BA-02      | Broken Auth       | `TC_BA_02_BruteForceRateLimit`                    |
+| TC-BA-03      | Broken Auth       | `TC_BA_03_SessionInvalidationAfterLogout`         |
+| TC-BA-04      | Broken Auth       | `TC_BA_04_UnauthenticatedAccessBlocked`           |
+| TC-BA-05      | Broken Auth       | `TC_BA_05_GenericErrorMessage`                    |
+| TC-CSRF-01    | CSRF              | `TC_CSRF_01_TokenPresenceOnForms`                 |
+| TC-CSRF-02    | CSRF              | `TC_CSRF_02_InvalidTokenRejected`                 |
+| TC-CSRF-03    | CSRF              | `TC_CSRF_03_CrossOriginRequestWithoutToken`       |
+
+Jalankan salah satu kategori saja:
+
+```bash
+python manage.py test tests_security.test_sql_injection
+python manage.py test tests_security.test_broken_auth
+python manage.py test tests_security.test_csrf
+python manage.py test tests_security.test_code_injection
+```
+
 ## Environment Variables
 
 Lihat `.env.example` untuk daftar lengkap. Singkatnya:

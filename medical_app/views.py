@@ -14,6 +14,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from auth_app.decorators import staff_role_required
+from auth_app.helpers import deny_access
 from auth_app.models import Staff
 
 from .forms import AppointmentForm, MedicalRecordEntryForm
@@ -288,7 +289,7 @@ def appointment_detail(request, appointment_id):
 
     staff = _get_current_staff(request)
     if staff is None:
-        return redirect("auth_app:denied")
+        return deny_access(request)
 
     # REGISTRATION boleh lihat semua appointment. DOCTOR hanya yang
     # diassign ke dirinya. Role lain tidak diizinkan.
@@ -297,7 +298,9 @@ def appointment_detail(request, appointment_id):
         allowed = False
 
     if not allowed:
-        return redirect("auth_app:denied")
+        return deny_access(
+            request, "Anda tidak berhak melihat appointment ini."
+        )
 
     return render(
         request,
@@ -318,7 +321,10 @@ def create_medical_record(request, encounter_id):
     staff = _get_current_staff(request)
 
     if encounter.staff_id != staff.id:
-        return redirect("auth_app:denied")
+        return deny_access(
+            request,
+            "Anda hanya boleh menulis rekam medis untuk encounter milik sendiri.",
+        )
 
     # Cegah dua MedicalRecordEntry untuk encounter yang sama — kalau
     # dokter perlu mengoreksi catatan, harus lewat flow amend terpisah
@@ -364,7 +370,10 @@ def medical_record_detail(request, record_id):
     staff = _get_current_staff(request)
 
     if record.encounter.staff_id != staff.id:
-        return redirect("auth_app:denied")
+        return deny_access(
+            request,
+            "Anda hanya boleh membaca rekam medis pasien Anda sendiri.",
+        )
 
     decrypted_data = record.decrypt_data()
 

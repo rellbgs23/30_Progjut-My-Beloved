@@ -13,6 +13,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
+from auth_app.helpers import deny_access
 from billing_app.models import Invoice
 from medical_app.models import Appointment, Encounter, MedicalRecordEntry, Patient
 from pharmacy_app.models import Prescription
@@ -23,8 +24,8 @@ from .forms import PatientAppointmentRequestForm, SelfRegistrationForm
 def _require_patient(request):
     """Return the Patient profile for the current user, or None.
 
-    View lain dapat memanggil ini lalu mengarahkan ke halaman denied
-    saat None dikembalikan.
+    Jika None, caller harus memanggil `deny_access()` untuk redirect
+    user ke home-nya sendiri alih-alih memblok halaman.
     """
 
     user = request.user
@@ -35,7 +36,10 @@ def _require_patient(request):
 
 
 def _denied(request):
-    return redirect("auth_app:denied")
+    # Delegasi ke helper terpusat: anon -> login, staff -> home + flash.
+    return deny_access(
+        request, "Halaman ini khusus untuk pasien terdaftar."
+    )
 
 
 def home(request):

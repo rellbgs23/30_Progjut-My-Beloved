@@ -131,8 +131,12 @@ def profile_view(request):
 
 
 def access_denied_view(request):
-    """Render halaman Access Denied dengan HTTP 403.
+    """Compatibility endpoint.
 
-    Dipakai oleh decorator `user_passes_test` sebagai `login_url`.
+    Sesuai permintaan UX: user yang login tidak boleh "ditahan" di halaman
+    denied. Endpoint ini sekarang berperan sebagai shim — kita alihkan
+    langsung ke home (yang me-route ke dashboard role user) atau ke login
+    bila anon. Pesan flash dikeluarkan supaya user tahu kenapa dialihkan.
     """
-    return render(request, "auth_app/denied.html", status=403)
+    from .helpers import deny_access
+    return deny_access(request)

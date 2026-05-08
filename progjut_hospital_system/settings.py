@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "pharmacy_app",
     "billing_app",
     "core_app",
+    "tests_security",
 ]
 
 AUTH_USER_MODEL = "auth_app.UserAccount"

@@ -5,6 +5,7 @@ from django.forms import formset_factory
 from django.shortcuts import get_object_or_404, redirect, render
 
 from auth_app.decorators import staff_role_required
+from auth_app.helpers import deny_access
 from auth_app.models import Staff
 from billing_app.models import AuditLog
 from medical_app.models import Encounter
@@ -30,9 +31,12 @@ def create_prescription(request, encounter_id):
 
     if encounter.staff_id != staff.id:
         # Dokter hanya boleh bikin resep untuk encounter miliknya sendiri.
-        # Redirect ke halaman denied supaya pesan konsisten dengan role
-        # check lain dan kejadiannya bisa dilacak lewat middleware audit.
-        return redirect("auth_app:denied")
+        # Redirect ke home + flash supaya pesan konsisten dengan role
+        # check lain dan kejadiannya tetap bisa dilacak lewat AuditLog.
+        return deny_access(
+            request,
+            "Anda hanya boleh menulis resep untuk encounter milik sendiri.",
+        )
 
     ItemFormSet = formset_factory(
         PrescriptionItemForm, extra=1, min_num=1, validate_min=True
@@ -119,13 +123,18 @@ def prescription_detail(request, prescription_id):
 
     staff = _get_current_staff(request)
     if staff is None:
-        return redirect("auth_app:denied")
+        return deny_access(request)
 
     if staff.role not in {"PHARMACIST", "DOCTOR"}:
-        return redirect("auth_app:denied")
+        return deny_access(
+            request, "Halaman ini hanya untuk apoteker atau dokter."
+        )
 
     if staff.role == "DOCTOR" and prescription.encounter.staff_id != staff.id:
-        return redirect("auth_app:denied")
+        return deny_access(
+            request,
+            "Anda hanya boleh melihat resep milik encounter sendiri.",
+        )
 
     return render(
         request,
