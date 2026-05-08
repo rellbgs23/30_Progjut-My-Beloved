@@ -10,8 +10,11 @@ def is_cashier(user):
 
 # kick user yang belum login (CWE-287)
 # atau user yang login tapi bukan Kasir (CWE-862)
+
+
 @login_required
-@user_passes_test(is_cashier, login_url='/auth/denied/') # TODO: bikin hal. access denied
+# TODO: bikin hal. access denied
+@user_passes_test(is_cashier, login_url='/auth/denied/')
 def process_payment(request):
     if request.method == 'POST':
         form = PaymentForm(request.POST)
@@ -41,7 +44,8 @@ def process_payment(request):
                     messages.success(
                         request, f"Pembayaran berhasil dicatat. Sisa tagihan masih menunggu.")
 
-                return redirect('process_payment')  # refresh halaman
+                # refresh halaman
+                return redirect('billing_app:process_payment')
 
             except ValidationError as e:
                 messages.error(request, e.message)

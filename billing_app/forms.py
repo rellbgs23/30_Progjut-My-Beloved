@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django import forms
 from django.core.exceptions import ValidationError
 from .models import Payment, Invoice
@@ -44,7 +45,8 @@ class PaymentForm(forms.ModelForm):
 
         if paid_amount and invoice:
             current_payments = sum(
-                p.paidAmount for p in invoice.payment_set.all())
+                (p.paidAmount for p in invoice.payment_set.all()), Decimal('0.00')
+            )
             remaining_balance = invoice.totalAmount - current_payments
 
             if paid_amount > remaining_balance:
