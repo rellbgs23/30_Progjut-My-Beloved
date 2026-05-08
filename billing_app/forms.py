@@ -1,53 +1,51 @@
 from decimal import Decimal
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Payment, Invoice
+from .models import Payment
 
 
 class PaymentForm(forms.ModelForm):
     class Meta:
         model = Payment
-        # tidak usah memasukkan 'processedBy' ke sini untuk mencegah Spoofing.
-        # identitas kasir akan di-inject langsung di views.py berdasarkan request.user
-        fields = ['invoice', 'paidAmount', 'method']
+        # invoice sengaja ga dimasukkan karena sudah di-handle via URL di views.py
+        fields = ['paidAmount', 'method']
 
         widgets = {
-            'paidAmount': forms.NumberInput(attrs={'class': 'form-control', 'min': '0.01', 'step': '0.01'}),
+            # min diganti jadi 1000 buat UI di HTML
+            'paidAmount': forms.NumberInput(attrs={'class': 'form-control', 'min': '1000', 'step': '1'}),
             'method': forms.Select(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
+        # Ambil instance 'invoice' yang dilempar dari views.py (kalau ada)
+        # Hapus dari kwargs biar nggak error saat manggil super()
+        self.invoice_instance = kwargs.pop('invoice', None)
         super().__init__(*args, **kwargs)
 
-        # hanya tampilkan Invoice yang statusnya UNPAID di dropdown.
-        # mencegah Kasir memproses tagihan yang sudah lunas atau dibatalkan.
-        self.fields['invoice'].queryset = Invoice.objects.filter(
-            status=Invoice.InvoiceStatus.UNPAID)
-        self.fields['invoice'].widget.attrs.update({'class': 'form-control'})
-
-        self.fields['invoice'].label = "Pilih Tagihan (UNPAID)"
         self.fields['paidAmount'].label = "Nominal Pembayaran (Rp)"
         self.fields['method'].label = "Metode Pembayaran"
 
     def clean_paidAmount(self):
         paid_amount = self.cleaned_data.get('paidAmount')
 
-        # validasi tambahan di form untuk memastikan input tidak bernilai 0 atau negatif
-        if paid_amount is None or paid_amount <= 0:
-            raise ValidationError("Nominal pembayaran harus lebih dari 0!")
+        # Aturan baru: validasi minimal bayar Rp 1.000
+        if paid_amount is None or paid_amount < Decimal('1000.00'):
+            raise ValidationError(
+                "Nominal pembayaran minimal adalah Rp 1.000!")
 
         return paid_amount
 
     def clean(self):
         cleaned_data = super().clean()
         paid_amount = cleaned_data.get('paidAmount')
-        invoice = cleaned_data.get('invoice')
 
-        if paid_amount and invoice:
+        # Cek sisa tagihan langsung di dalam form pakai invoice_instance
+        if paid_amount and self.invoice_instance:
             current_payments = sum(
-                (p.paidAmount for p in invoice.payment_set.all()), Decimal('0.00')
+                (p.paidAmount for p in self.invoice_instance.payment_set.all()), Decimal(
+                    '0.00')
             )
-            remaining_balance = invoice.totalAmount - current_payments
+            remaining_balance = self.invoice_instance.totalAmount - current_payments
 
             if paid_amount > remaining_balance:
                 self.add_error(

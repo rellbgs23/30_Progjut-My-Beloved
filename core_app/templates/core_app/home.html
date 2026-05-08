@@ -212,7 +212,7 @@
           <a href="{% url 'auth_app:profile' %}" class="btn btn-primary">Go to Profile</a>
 
           {% if request.user.staff.role == 'CASHIER' %}
-            <a href="{% url 'billing_app:process_payment' %}" class="btn btn-secondary">Buka Kasir</a>
+            <a href="{% url 'billing_app:invoice_list' %}" class="btn btn-secondary">Buka Kasir</a>
           {% endif %}
         {% else %}
           <a href="{% url 'auth_app:login' %}" class="btn btn-primary">
