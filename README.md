@@ -1,135 +1,159 @@
-# PKPL26_HospitalSys - Hospital Information System
+# MediCore — Hospital Information System
 
-Repositori ini berisi implementasi Tugas 3 - Kelompok untuk mata kuliah Pengantar Keamanan Perangkat Lunak, berfokus pada Praktik Secure Coding menggunakan framework Django.
+Implementasi Tugas 3 Kelompok PKPL (Pengantar Keamanan Perangkat Lunak)
+dengan framework Django, berfokus pada praktik **secure coding** untuk
+aplikasi multi-role rumah sakit.
 
----
+## Peran & Alur
 
-## 🚀 Petunjuk Instalasi & Menjalankan Aplikasi Secara Lokal
+| Role           | Kemampuan utama                                                          |
+|----------------|--------------------------------------------------------------------------|
+| **Patient**    | Registrasi mandiri, minta appointment, lihat rekam medis & invoice.      |
+| **Registration** | Buat appointment dari dalam rumah sakit.                               |
+| **Doctor**     | Isi encounter, tulis rekam medis (diagnosis, treatment plan, notes).    |
+| **Pharmacist** | Validasi & dispense resep digital.                                      |
+| **Cashier**    | Catat pembayaran terhadap invoice UNPAID.                               |
 
-Ikuti langkah-langkah berikut untuk melakukan setup proyek di mesin lokal Anda:
+## Stack
 
-1. **Clone Repositori**
-    ```
-    git clone https://gitlab.cs.ui.ac.id/pkpl26/30-progjut-my-beloved/pkpl26_30_progjut-my-beloved.git
+- **Backend**: Django 5.2, Python 3.11
+- **Database**: SQLite (dev) / PostgreSQL (production-ready)
+- **Crypto**: `cryptography` (Fernet field encryption), HMAC-SHA256 signatures
+- **Rate limiting**: `django-ratelimit` 4.x
 
-    cd PKPL26_HospitalSys
-    ```
+## Menjalankan di Lokal
 
-2. **Buat & Aktivasi Virtual Environment**
-   * Windows:
+```bash
+# 1. Clone & masuk folder
+git clone https://github.com/Rafsandeylora/30_Progjut-My-Beloved.git
+cd 30_Progjut-My-Beloved
 
-     ```
-     python -m venv venv
-     venv\Scripts\activate
-     ```
-   * macOS/Linux:
-     ```
-     python3 -m venv venv
-     source venv/bin/activate
-     ```
+# 2. Virtualenv (Python 3.11+)
+python3.11 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
-3. **Install Dependencies**
-    ```
-    pip install -r requirements.txt
-    ```
+# 3. Install dependencies
+pip install -r requirements.txt
 
-4. **Setup Environment Variables (.env)**
-   Buat file bernama .env di direktori utama (sejajar dengan manage.py) dan isi dengan konfigurasi berikut:
-    ```
-    DJANGO_SECRET_KEY=isi_dengan_secret_key_lokal_anda
-    ```
+# 4. Siapkan .env (salin dari .env.example lalu isi)
+cp .env.example .env
+# Generate nilai yang diperlukan:
+#   DJANGO_SECRET_KEY, PRESCRIPTION_SIGNING_KEY, FIELD_ENCRYPTION_KEY
 
-5. **Jalankan Migrasi Database**
+# 5. Migrasi & jalankan server
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
 
-    ```
-    python manage.py makemigrations
-    python manage.py migrate
-    ```
+Akses `http://127.0.0.1:8000/` — akan diarahkan otomatis ke halaman login
+atau dashboard sesuai role.
 
-6. **Jalankan Server Lokal**
-    ```
-    python manage.py runserver
-    ```
-   Akses aplikasi di browser melalui http://127.0.0.1:8000/
+## Struktur Proyek
 
----
+```
+progjut_hospital_system/     # Django project (settings, root URLs)
+auth_app/                     # UserAccount, Staff, login & MFA
+core_app/                     # Portal pasien (self-register, dashboard)
+medical_app/                  # Patient, Appointment, Encounter, MedicalRecordEntry
+pharmacy_app/                 # Prescription, PrescriptionItem + signature
+billing_app/                  # Invoice, Payment, AuditLog (hash chain)
+templates/                    # Base templates + partial topbar
+static/css/medicore.css       # Design system (warna, typografi, komponen)
+```
 
-## A. Deskripsi Aplikasi
+Semua template meng-extend `templates/base.html` (layout terautentikasi)
+atau `templates/base_auth.html` (login/registration), sehingga perubahan
+branding/komponen cukup dilakukan sekali di file desain tersebut.
 
-> TODO: ...
+## Implementasi Secure Coding
 
-* **Skenario:** Hospital Information System
-* **Fitur Utama:** Rekam medis pasien, jadwal dokter, resep obat.
-* **Peran Pengguna:** Dokter, Pasien, Apoteker, Petugas Pendaftaran, Kasir.
-* **Stack Teknologi:** Django, SQLite, Python.
+### 1. Broken Authentication & Session
 
----
+- Password divalidasi Django's `AUTH_PASSWORD_VALIDATORS` (minimal 10
+  karakter, cek kemiripan dengan data user, block common passwords).
+- **Rate limit** pada login: 10/menit per-IP & 5/menit per-username via
+  `django-ratelimit`.
+- **Account lockout** 15 menit setelah 5 kegagalan berturut-turut.
+  Increment counter pakai `F()` expression sehingga atomic terhadap race.
+- **User enumeration** dihindari dengan pesan error yang identik (dan
+  `authenticate()` tetap dipanggil meski username tidak ada, supaya
+  timing tidak bocorkan info).
+- **MFA flag** wajib untuk internal staff; endpoint sensitif (pharmacy
+  validate/dispense) memakai decorator `@mfa_required`.
+- Session: `SESSION_COOKIE_SECURE`, `HTTPONLY`, `SAMESITE=Lax`,
+  sliding expiration 30 menit.
+- Login Django `login()` otomatis rotate session ID (cegah session fixation).
 
-## B. Implementasi Secure Coding
+### 2. CSRF Protection
 
-> TODO: ...
+- Global lewat `CsrfViewMiddleware`.
+- Semua form `POST` menyertakan `{% csrf_token %}`.
+- `CSRF_COOKIE_SECURE`, `HTTPONLY`, `SAMESITE=Lax`.
+- `CSRF_TRUSTED_ORIGINS` env-driven untuk deploy di belakang TLS proxy.
 
-### 1. Code Injection Prevention
+### 3. SQL Injection
 
-* **Penjelasan Vulnerability:** 
-Code Injection terjadi ketika app mengeksekusi kode yang berasal dari input user tanpa validasi. Attacker bisa inject kode yang berbahaya (Python, SQL, template expression) untuk merusak aplikasi.
+- Semua query lewat Django ORM (parameterized).
+- Path parameter yang bukan UUID otomatis ditolak oleh URL resolver
+  (`<uuid:...>`), mencegah raw input ke query layer.
 
-* **Code Snippet Perbandingan:** [TODO: Snippet kode sebelum (vulnerable) dan sesudah (secure) sebagai perbandingan]
-* **Teknik Mitigasi:** [TODO: Penjelasan teknik mitigasi yang digunakan]
+### 4. XSS & Output Encoding
 
-### 2. Broken Authentication Mitigation
+- Django template engine auto-escape semua variable (`{{ }}`).
+- Input user (nama, alamat, phone) divalidasi dengan regex whitelist.
+- `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+  `Referrer-Policy: same-origin`.
 
-* **Penjelasan Vulnerability:** 
-Broken Authentication memungkinkan attacker untuk mendapatkan akses tanpa kredensial yang sah. Ini termasuk:
-- Password disimpan plaintext atau hash lemah
-- Session token yang predictable atau tidak di-invalidate
-- Tidak ada rate limiting pada login attempts
-- Tidak ada pembedaan privilege antar role
+### 5. Sensitive Data Protection
 
-* **Code Snippet Perbandingan:** [TODO: Snippet kode sebelum (vulnerable) dan sesudah (secure) sebagai perbandingan]
-* **Teknik Mitigasi:** [TODO: Penjelasan teknik mitigasi yang digunakan]
+- PHI (diagnosis, treatment plan, notes) dienkripsi at-rest dengan
+  Fernet (AES-128-CBC + HMAC) sebelum disimpan ke DB.
+- Prescription **ditandatangani HMAC-SHA256** meliputi `itemId`,
+  `medicineName`, `dosage`, `quantity`, dan `instruction`. Payload
+  ter-serialisasi JSON canonical supaya hash reproducible.
+- `FIELD_ENCRYPTION_KEY` dan `PRESCRIPTION_SIGNING_KEY` dipisahkan
+  dari `DJANGO_SECRET_KEY` sehingga rotasi kunci satu tidak meng-
+  invalidasi yang lain.
 
-### 3. CSRF Protection
+### 6. Broken Access Control
 
-* **Penjelasan Vulnerability:** 
-CSRF attack memungkinkan attacker mengirim request yang tidak sah atas nama user yang authenticated. Contoh: user login ke bank, kemudian mengklik link jahat yang melakukan transfer dana tanpa persetujuan.
+- Decorator `@staff_role_required(...)` merender halaman Access Denied
+  dengan status 403 untuk role yang tidak diizinkan.
+- Row-level check di setiap view: dokter hanya dapat melihat encounter
+  miliknya, pasien hanya dapat melihat data miliknya (filter di query).
+- `processedBy` pada Payment di-inject dari sesi login — tidak pernah
+  dari payload form (anti-spoofing).
 
-* **Code Snippet Perbandingan:** [TODO: Snippet kode sebelum (vulnerable) dan sesudah (secure) sebagai perbandingan]
-* **Teknik Mitigasi:** [TODO: Penjelasan teknik mitigasi yang digunakan]
+### 7. Audit Log & Non-repudiation
 
-### 4. SQL Injection Prevention
+- `billing_app.AuditLog` membentuk **hash chain** (setiap log membawa
+  hash log sebelumnya). Pembangunan chain dilakukan dalam transaction
+  + `select_for_update` supaya dua log konkuren tidak menghasilkan
+  cabang chain.
+- Record dibuat saat login gagal, role check gagal, signature fail,
+  payment sukses, validate, dan dispense.
 
-* **Penjelasan Vulnerability:** 
-SQL Injection terjadi ketika user input digunakan langsung dalam SQL query tanpa sanitasi. Attacker bisa memanipulasi query untuk mengakses/mengubah/menghapus data tanpa authorization.
+## Test
 
-* **Code Snippet Perbandingan:** [TODO: Snippet kode sebelum (vulnerable) dan sesudah (secure) sebagai perbandingan]
-* **Teknik Mitigasi:** [TODO: Penjelasan teknik mitigasi yang digunakan]
+```bash
+# jalankan semua test security
+DJANGO_SECRET_KEY=test python manage.py test
 
----
+# cek konfigurasi production
+DJANGO_SECRET_KEY=... DEBUG=False DJANGO_ALLOWED_HOSTS=example.com \
+    python manage.py check --deploy
+```
 
-## C. Screenshot Aplikasi
+## Environment Variables
 
-> TODO: Tampilkan screenshot antarmuka utama dan fitur keamanan.
+Lihat `.env.example` untuk daftar lengkap. Singkatnya:
 
-* [TODO: Screenshot Halaman Login (Menunjukkan mitigasi Broken Auth)]
-* [TODO: Screenshot Halaman Utama (Role-Based Access)]
-* [TODO: Screenshot Halaman Form (Menunjukkan implementasi keamanan input)]
-
----
-
-## D. Hasil Test-Case
-
-> TODO: Masukin screenshot atau log hasil pengujian test-case.
-
-* [TODO: Hasil Test Case 1 - Code Injection]
-* [TODO: Hasil Test Case 2 - Broken Authentication]
-* [TODO: Hasil Test Case 3 - CSRF]
-* [TODO: Hasil Test Case 4 - SQL Injection]
-
----
-
-## 🎥 Link Video Demo & Penjelasan
-
-> TODO: Masukin link video presentasi/demo yang telah diupload ke youtube.
-
-* **Link Video:** 
+| Variable                    | Wajib | Keterangan                                  |
+|-----------------------------|-------|---------------------------------------------|
+| `DJANGO_SECRET_KEY`         | ✅    | Fail-fast kalau tidak di-set.               |
+| `DEBUG`                     | —     | Default False.                              |
+| `DJANGO_ALLOWED_HOSTS`      | prod  | Comma-separated.                            |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | prod | Kalau di belakang reverse proxy TLS.      |
+| `PRESCRIPTION_SIGNING_KEY`  | ✅    | HMAC key untuk tanda tangan resep.          |
+| `FIELD_ENCRYPTION_KEY`      | ✅    | Fernet key (32-byte base64) untuk PHI.      |

@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="same-origin">
+    <title>{% block title %}MediCore — Hospital Information System{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/medicore.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    {% block layout %}
+        {% include "partials/topbar.html" %}
+
+        <main class="page-wrapper {% block wrapper_class %}{% endblock %}" role="main">
+            {% block breadcrumb %}{% endblock %}
+
+            {% block page_header %}
+                {% if page_title %}
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">{{ page_title }}</h1>
+                            {% if page_subtitle %}
+                                <p class="page-subtitle">{{ page_subtitle }}</p>
+                            {% endif %}
+                        </div>
+                        {% block header_actions %}{% endblock %}
+                    </div>
+                {% endif %}
+            {% endblock %}
+
+            {% if messages %}
+                <div class="messages" role="alert" aria-live="polite">
+                    {% for message in messages %}
+                        <p class="{{ message.tags|default:'info' }}">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    {% endblock %}
+
+    {% block extra_body %}{% endblock %}
+</body>
+</html>

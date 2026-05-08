@@ -1,197 +1,60 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create Prescription</title>
-  <style>
-    :root {
-      --bg: #f2f8fa;
-      --surface: #ffffff;
-      --surface-soft: #f8fbfc;
-      --line: #d7e5e9;
-      --text: #0f2b34;
-      --text-muted: #4b6570;
-      --primary: #0f766e;
-      --primary-strong: #115e59;
-      --shadow: 0 16px 40px rgba(15, 43, 52, 0.12);
-      --radius: 18px;
-    }
+{% extends "base.html" %}
 
-    * {
-      box-sizing: border-box;
-    }
+{% block title %}Create Prescription — MediCore{% endblock %}
 
-    body {
-      margin: 0;
-      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 8% -12%, #99f6e4 0%, rgba(153, 246, 228, 0) 38%),
-        radial-gradient(circle at 100% 0%, #bfdbfe 0%, rgba(191, 219, 254, 0) 34%),
-        var(--bg);
-      min-height: 100vh;
-    }
+{% block breadcrumb %}
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <span>Pharmacy</span>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>New Prescription</span>
+    </nav>
+{% endblock %}
 
-    .container {
-      width: min(1020px, calc(100% - 2rem));
-      margin: 2rem auto 3rem;
-      display: grid;
-      gap: 1rem;
-    }
+{% block content %}
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Create Prescription</h1>
+            <p class="page-subtitle">
+                For {{ encounter.patient.name }} &middot; Encounter {{ encounter.id|stringformat:'s'|slice:':8' }}…
+            </p>
+        </div>
+    </div>
 
-    .hero {
-      border-radius: 24px;
-      padding: 1.3rem 1.5rem;
-      color: #ebfffe;
-      background: linear-gradient(130deg, #0f766e, #0b4f5c);
-      box-shadow: var(--shadow);
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(1.4rem, 2vw, 1.95rem);
-    }
-
-    .hero p {
-      margin: 0.5rem 0 0;
-      color: #c6f7f5;
-      font-size: 0.95rem;
-      word-break: break-word;
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 1rem;
-    }
-
-    .group-list {
-      display: grid;
-      gap: 0.8rem;
-    }
-
-    fieldset {
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 0.85rem;
-      background: var(--surface-soft);
-      margin: 0;
-    }
-
-    legend {
-      padding: 0 0.45rem;
-      color: var(--text-muted);
-      font-weight: 700;
-      font-size: 0.9rem;
-    }
-
-    p {
-      margin: 0.45rem 0;
-    }
-
-    label {
-      display: block;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 0.3rem;
-    }
-
-    input,
-    textarea,
-    select {
-      width: 100%;
-      padding: 0.64rem 0.72rem;
-      border: 1px solid #c6d6dd;
-      border-radius: 10px;
-      font: inherit;
-      color: var(--text);
-      background: #fff;
-    }
-
-    input:focus,
-    textarea:focus,
-    select:focus {
-      outline: none;
-      border-color: #14b8a6;
-      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
-    }
-
-    .actions {
-      margin-top: 0.9rem;
-      display: flex;
-      gap: 0.65rem;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      appearance: none;
-      border: none;
-      border-radius: 10px;
-      padding: 0.7rem 1.15rem;
-      font-weight: 700;
-      cursor: pointer;
-      text-decoration: none;
-      text-align: center;
-      transition: background 160ms ease;
-      color: #fff;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-    }
-
-    .btn-primary:hover,
-    .btn-primary:focus-visible {
-      background: var(--primary-strong);
-    }
-
-    .btn-neutral {
-      background: #51656f;
-    }
-
-    .btn-neutral:hover,
-    .btn-neutral:focus-visible {
-      background: #3f5059;
-    }
-
-    @media (max-width: 620px) {
-      .btn {
-        width: 100%;
-      }
-    }
-  </style>
-</head>
-<body>
-  <main class="container" aria-labelledby="page-title">
-    <header class="hero">
-      <h1 id="page-title">Create Prescription</h1>
-      <p>Encounter: {{ encounter.id }}</p>
-      <p>Patient: {{ encounter.patient.name }}</p>
-    </header>
-
-    <section class="card" aria-label="Prescription creation form">
-      <form method="post">
-        {% csrf_token %}
-        {{ formset.management_form }}
-
-        <div class="group-list">
-          {% for form in formset %}
-            <fieldset>
-              <legend>Medicine {{ forloop.counter }}</legend>
-              {{ form.as_p }}
-            </fieldset>
-          {% endfor %}
+    <div class="card" role="region" aria-label="Prescription Form">
+        <div class="card-label">
+            <div class="card-label-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            </div>
+            <span class="card-label-text">Medications</span>
         </div>
 
-        <div class="actions">
-          <button class="btn btn-primary" type="submit">Save Prescription</button>
-          <a class="btn btn-neutral" href="{% url 'pharmacy_app:prescription_list' %}">Back to Queue</a>
-        </div>
-      </form>
-    </section>
-  </main>
-</body>
-</html>
+        <form method="post" class="mc-form" novalidate>
+            {% csrf_token %}
+            {{ formset.management_form }}
+
+            <div class="form-body">
+                {% for form in formset %}
+                    <fieldset style="border:1px solid var(--border-soft); border-radius:var(--radius-md); padding:16px 18px; margin-bottom:16px; background:var(--surface);">
+                        <legend style="padding:0 8px; font-size:0.78rem; font-weight:500; color:var(--muted); letter-spacing:0.06em; text-transform:uppercase;">
+                            Medicine {{ forloop.counter }}
+                        </legend>
+                        {{ form.as_p }}
+                    </fieldset>
+                {% endfor %}
+            </div>
+
+            <div class="form-note">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Once saved, the prescription is digitally signed. Any tampering will invalidate it at the pharmacist's verification step.
+            </div>
+
+            <div class="form-footer">
+                <button class="btn btn-primary" type="submit">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Save Prescription
+                </button>
+                <a class="btn btn-secondary" href="{% url 'pharmacy_app:prescription_list' %}">Back to Queue</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

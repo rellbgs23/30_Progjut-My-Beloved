@@ -1,139 +1,55 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dispense Medicine</title>
-  <style>
-    :root {
-      --bg: #f3f8f9;
-      --surface: #ffffff;
-      --line: #d7e4e9;
-      --text: #102a33;
-      --text-muted: #4b6670;
-      --ok: #166534;
-      --ok-strong: #14532d;
-      --neutral: #51646d;
-      --neutral-strong: #3f5058;
-      --shadow: 0 18px 34px rgba(16, 42, 51, 0.12);
-    }
+{% extends "base.html" %}
 
-    * {
-      box-sizing: border-box;
-    }
+{% block title %}Dispense Medicine — MediCore{% endblock %}
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 1rem;
-      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 8% -8%, #bbf7d0 0%, rgba(187, 247, 208, 0) 36%),
-        radial-gradient(circle at 96% 0%, #bfdbfe 0%, rgba(191, 219, 254, 0) 34%),
-        var(--bg);
-    }
+{% block breadcrumb %}
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <span>Pharmacy</span>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <a href="{% url 'pharmacy_app:prescription_list' %}">Prescription Queue</a>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>Dispense</span>
+    </nav>
+{% endblock %}
 
-    .card {
-      width: min(560px, 100%);
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      box-shadow: var(--shadow);
-      background: var(--surface);
-      padding: 1.3rem;
-    }
+{% block wrapper_class %}narrow{% endblock %}
 
-    h1 {
-      margin: 0;
-      font-size: clamp(1.3rem, 2.3vw, 1.8rem);
-    }
+{% block content %}
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Dispense Medicine</h1>
+            <p class="page-subtitle">Confirm medicine handover for this validated prescription</p>
+        </div>
+    </div>
 
-    .desc {
-      margin: 0.5rem 0 0;
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
+    <div class="card accent-teal">
+        <div class="card-label">
+            <div class="card-label-icon icon-green" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <span class="card-label-text">Handover Confirmation</span>
+        </div>
 
-    .meta {
-      margin-top: 1rem;
-      border: 1px solid #bbf7d0;
-      background: #f0fdf4;
-      border-radius: 14px;
-      padding: 0.9rem;
-      display: grid;
-      gap: 0.4rem;
-    }
+        <div class="data-row">
+            <span class="data-row-label">Prescription ID</span>
+            <span class="data-row-value" style="font-family:monospace; font-size:0.8rem;">{{ prescription.id }}</span>
+        </div>
+        <div class="data-row">
+            <span class="data-row-label">Current Status</span>
+            <span class="data-row-value">
+                <span class="badge badge-teal"><span class="badge-dot"></span>{{ prescription.get_status_display }}</span>
+            </span>
+        </div>
 
-    .meta p {
-      margin: 0;
-      word-break: break-word;
-      font-size: 0.94rem;
-    }
-
-    .actions {
-      margin-top: 1rem;
-      display: flex;
-      gap: 0.6rem;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      appearance: none;
-      border: none;
-      border-radius: 10px;
-      padding: 0.65rem 1.1rem;
-      font-weight: 700;
-      cursor: pointer;
-      text-decoration: none;
-      text-align: center;
-      color: #fff;
-      transition: background 160ms ease;
-    }
-
-    .btn-ok {
-      background: var(--ok);
-    }
-
-    .btn-ok:hover,
-    .btn-ok:focus-visible {
-      background: var(--ok-strong);
-    }
-
-    .btn-neutral {
-      background: var(--neutral);
-    }
-
-    .btn-neutral:hover,
-    .btn-neutral:focus-visible {
-      background: var(--neutral-strong);
-    }
-
-    @media (max-width: 520px) {
-      .btn {
-        width: 100%;
-      }
-    }
-  </style>
-</head>
-<body>
-  <main class="card" aria-labelledby="dispense-title">
-    <h1 id="dispense-title">Dispense Medicine</h1>
-    <p class="desc">Confirm medicine handover for this validated prescription.</p>
-
-    <section class="meta" aria-label="Prescription summary">
-      <p><strong>Prescription:</strong> {{ prescription.id }}</p>
-      <p><strong>Status:</strong> {{ prescription.status }}</p>
-    </section>
-
-    <form method="post" aria-label="Dispense medicine form">
-      {% csrf_token %}
-      <div class="actions">
-        <button class="btn btn-ok" type="submit">Dispense</button>
-        <a class="btn btn-neutral" href="{% url 'pharmacy_app:prescription_detail' prescription.id %}">Cancel</a>
-      </div>
-    </form>
-  </main>
-</body>
-</html>
+        <div class="card-footer">
+            <form method="post" style="display:inline-flex; gap:12px;">
+                {% csrf_token %}
+                <button class="btn btn-green" type="submit">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    Confirm Dispense
+                </button>
+                <a class="btn btn-secondary" href="{% url 'pharmacy_app:prescription_detail' prescription.id %}">Cancel</a>
+            </form>
+        </div>
+    </div>
+{% endblock %}

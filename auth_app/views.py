@@ -109,7 +109,12 @@ def logout_view(request):
 
 @login_required(login_url="auth_app:login")
 def profile_view(request):
-    return render(request, "auth_app/profile.html")
+    staff = None
+    try:
+        staff = request.user.staff
+    except Exception:  # Staff.DoesNotExist atau user.staff tidak ada
+        staff = None
+    return render(request, "auth_app/profile.html", {"staff": staff, "active_nav": "profile"})
 
 
 def access_denied_view(request):

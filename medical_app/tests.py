@@ -95,6 +95,8 @@ class MedicalSecurityTests(TestCase):
             reverse("medical_app:medical_record_detail", args=[record.id])
         )
 
+        # Non-doctor ditolak oleh @staff_role_required decorator yang
+        # mengembalikan HttpResponseForbidden (403) langsung.
         self.assertEqual(response.status_code, 403)
 
     def test_doctor_can_create_medical_record_for_own_encounter(self):

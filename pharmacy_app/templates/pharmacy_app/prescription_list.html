@@ -1,176 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prescription Queue</title>
-  <style>
-    :root {
-      --bg: #f3f7f9;
-      --surface: #ffffff;
-      --surface-soft: #f8fbfc;
-      --text: #0f2a33;
-      --text-muted: #4a6770;
-      --primary: #0f766e;
-      --primary-strong: #115e59;
-      --accent: #0ea5a3;
-      --line: #d8e4e8;
-      --shadow: 0 14px 40px rgba(15, 42, 51, 0.12);
-      --radius: 18px;
-    }
+{% extends "base.html" %}
 
-    * {
-      box-sizing: border-box;
-    }
+{% block title %}Prescription Queue — MediCore{% endblock %}
 
-    body {
-      margin: 0;
-      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 20% -15%, #b2f5ea 0%, rgba(178, 245, 234, 0) 42%),
-        radial-gradient(circle at 85% 0%, #bae6fd 0%, rgba(186, 230, 253, 0) 36%),
-        var(--bg);
-      min-height: 100vh;
-    }
+{% block breadcrumb %}
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <span>Pharmacy</span>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>Prescription Queue</span>
+    </nav>
+{% endblock %}
 
-    .container {
-      width: min(1100px, calc(100% - 2rem));
-      margin: 2rem auto 3rem;
-    }
+{% block content %}
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Prescription Queue</h1>
+            <p class="page-subtitle">Prescriptions awaiting pharmacist verification</p>
+        </div>
+    </div>
 
-    .hero {
-      background: linear-gradient(130deg, #0f766e, #0b4f5c);
-      color: #eafcfc;
-      border-radius: 24px;
-      padding: 1.4rem 1.5rem;
-      box-shadow: var(--shadow);
-      margin-bottom: 1.2rem;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(1.45rem, 2vw, 2rem);
-      letter-spacing: 0.01em;
-    }
-
-    .subtitle {
-      margin: 0.55rem 0 0;
-      color: #c9f7f5;
-      font-size: 0.98rem;
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 0.7rem;
-      overflow: hidden;
-    }
-
-    .queue {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: grid;
-      gap: 0.65rem;
-    }
-
-    .queue-item {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 1rem;
-      align-items: center;
-      padding: 0.95rem;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: var(--surface-soft);
-      transition: transform 160ms ease, box-shadow 160ms ease;
-    }
-
-    .queue-item:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 10px 20px rgba(15, 42, 51, 0.08);
-    }
-
-    .meta-title {
-      margin: 0 0 0.35rem;
-      font-size: 1rem;
-      word-break: break-word;
-    }
-
-    .meta-sub {
-      margin: 0;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      word-break: break-word;
-    }
-
-    .link-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.62rem 1rem;
-      border-radius: 10px;
-      text-decoration: none;
-      background: var(--primary);
-      color: #fff;
-      font-weight: 600;
-      white-space: nowrap;
-      transition: background 160ms ease;
-    }
-
-    .link-btn:hover,
-    .link-btn:focus-visible {
-      background: var(--primary-strong);
-    }
-
-    .empty {
-      margin: 0;
-      border: 1px dashed var(--line);
-      border-radius: 12px;
-      background: var(--surface-soft);
-      color: var(--text-muted);
-      padding: 1rem;
-      text-align: center;
-    }
-
-    @media (max-width: 720px) {
-      .queue-item {
-        grid-template-columns: 1fr;
-      }
-
-      .link-btn {
-        width: 100%;
-      }
-    }
-  </style>
-</head>
-<body>
-  <main class="container" aria-labelledby="page-title">
-    <section class="hero">
-      <h1 id="page-title">Prescription Queue</h1>
-      <p class="subtitle">Prioritized list of prescriptions awaiting pharmacist verification.</p>
-    </section>
-
-    <section class="card" aria-label="Created prescriptions list">
-      {% if prescriptions %}
-        <ul class="queue">
-          {% for prescription in prescriptions %}
-            <li class="queue-item">
-              <div>
-                <p class="meta-title">{{ prescription.encounter.patient.name }}</p>
-                <p class="meta-sub">Prescription ID: {{ prescription.id }}</p>
-              </div>
-              <a class="link-btn" href="{% url 'pharmacy_app:prescription_detail' prescription.id %}">View Detail</a>
-            </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p class="empty">No CREATED prescriptions available.</p>
-      {% endif %}
-    </section>
-  </main>
-</body>
-</html>
+    <div class="card">
+        {% if prescriptions %}
+            <ul class="mc-list">
+                {% for prescription in prescriptions %}
+                    <li class="mc-list-item">
+                        <div>
+                            <div class="primary">{{ prescription.encounter.patient.name }}</div>
+                            <div class="secondary">
+                                Issued by Dr. {{ prescription.encounter.staff.name }}
+                                &middot;
+                                {{ prescription.items.count }} item{{ prescription.items.count|pluralize }}
+                                &middot;
+                                {{ prescription.encounter.dateTime|date:"d M Y H:i" }}
+                            </div>
+                        </div>
+                        <a class="btn btn-primary btn-sm" href="{% url 'pharmacy_app:prescription_detail' prescription.id %}">
+                            View Detail
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="mc-list-empty">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 7h18M3 12h18M3 17h18"/>
+                </svg>
+                <div>No prescriptions in the queue</div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -113,7 +113,8 @@ class PatientPortalTests(TestCase):
 
 		response = self.client.get(reverse("core_app:patient_dashboard"))
 
-		self.assertEqual(response.status_code, 403)
+		# Staff tanpa profil pasien akan di-redirect ke halaman denied.
+		self.assertRedirects(response, reverse("auth_app:denied"), status_code=302, target_status_code=403)
 
 	def test_patient_can_request_appointment(self):
 		self.client.login(username="patient1", password="StrongPassword123!")
