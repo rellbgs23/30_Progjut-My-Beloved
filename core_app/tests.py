@@ -113,7 +113,15 @@ class PatientPortalTests(TestCase):
 
 		response = self.client.get(reverse("core_app:patient_dashboard"))
 
-		self.assertEqual(response.status_code, 403)
+		self.assertRedirects(response, reverse("landing_page"))
+
+	def test_authenticated_user_cannot_open_registration_page(self):
+		self.client.force_login(self.patient_user)
+
+		response = self.client.get(reverse("core_app:patient_register"), follow=True)
+
+		self.assertRedirects(response, reverse("landing_page"))
+		self.assertContains(response, "Anda sudah login")
 
 	def test_patient_can_request_appointment(self):
 		self.client.login(username="patient1", password="StrongPassword123!")

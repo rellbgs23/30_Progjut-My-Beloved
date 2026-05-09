@@ -1,244 +1,76 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Welcome — MediCore HIS</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
-    <style>
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      
-      :root {
-        --navy: #0b1f3a;
-        --teal: #0d7377;
-        --teal-light: #14a085;
-        --surface: #f8fafb;
-        --muted: #7a8a9a;
-        --text: #1a2a3a;
-      }
-      
-      html,
-      body {
-        height: 100%;
-      }
-      
-      body {
-        font-family: 'DM Sans', sans-serif;
-        background-color: var(--surface);
-        color: var(--text);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        overflow-x: hidden;
-        position: relative;
-      }
-      
-      /* Background Pattern */
-      body::before {
-        content: '';
-        position: fixed;
-        inset: 0;
-        background: radial-gradient(circle at 50% 0%, rgba(13, 115, 119, 0.08) 0%, transparent 70%);
-        z-index: 0;
-      }
-      
-      .hero-container {
-        position: relative;
-        z-index: 1;
-        text-align: center;
-        max-width: 800px;
-        padding: 0 24px;
-        animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
-      }
-      
-      @keyframes fadeUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      
-      .brand-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 72px;
-        height: 72px;
-        margin-bottom: 24px;
-        background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
-        border-radius: 20px;
-        box-shadow: 0 8px 32px rgba(13, 115, 119, 0.3);
-      }
-      
-      .brand-icon svg {
-        width: 36px;
-        height: 36px;
-        fill: none;
-        stroke: #fff;
-        stroke-width: 2;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-      }
-      
-      .title {
-        font-family: 'Crimson Pro', Georgia, serif;
-        font-size: 3.5rem;
-        font-weight: 600;
-        color: var(--navy);
-        line-height: 1.1;
-        margin-bottom: 16px;
-        letter-spacing: -0.02em;
-      }
-      
-      .subtitle {
-        font-size: 1.1rem;
-        color: var(--muted);
-        font-weight: 300;
-        max-width: 600px;
-        margin: 0 auto 40px;
-        line-height: 1.6;
-      }
-      
-      .action-buttons {
-        display: flex;
-        gap: 16px;
-        justify-content: center;
-      }
-      
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 14px 28px;
-        border-radius: 12px;
-        font-weight: 500;
-        font-size: 0.95rem;
-        text-decoration: none;
-        transition: all 0.2s;
-      }
-      
-      .btn-primary {
-        background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
-        color: #fff;
-        box-shadow: 0 4px 16px rgba(13, 115, 119, 0.3);
-      }
-      
-      .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(13, 115, 119, 0.4);
-      }
-      
-      .btn-secondary {
-        background: #fff;
-        color: var(--navy);
-        border: 1.5px solid #d6dde6;
-      }
-      
-      .btn-secondary:hover {
-        border-color: var(--teal);
-        color: var(--teal);
-      }
-      
-      .features {
-        display: flex;
-        gap: 24px;
-        margin-top: 60px;
-        justify-content: center;
-        flex-wrap: wrap;
-        animation: fadeUp 0.7s 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
-      }
-      
-      .feature-card {
-        background: #fff;
-        padding: 20px 24px;
-        border-radius: 16px;
-        border: 1px solid #edf1f5;
-        text-align: left;
-        width: 220px;
-        box-shadow: 0 4px 12px rgba(11, 31, 58, 0.04);
-      }
-      
-      .feature-card h3 {
-        font-size: 0.9rem;
-        color: var(--navy);
-        margin-bottom: 6px;
-      }
-      .feature-card p {
-        font-size: 0.8rem;
-        color: var(--muted);
-      }
-      
-      @media (max-width: 600px) {
-        .title {
-          font-size: 2.5rem;
-        }
-        .action-buttons {
-          flex-direction: column;
-        }
-        .feature-card {
-          width: 100%;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <main class="hero-container">
-      <div class="brand-icon">
-        <svg viewBox="0 0 24 24">
-          <rect x="9" y="2" width="6" height="20" rx="1.5" />
-          <rect x="2" y="9" width="20" height="6" rx="1.5" />
-        </svg>
-      </div>
+{% extends "base.html" %}
 
-      <h1 class="title">MediCore Hospital System</h1>
-      <p class="subtitle">Sistem Informasi Rumah Sakit terintegrasi dengan standar keamanan tinggi. Mengelola rekam medis, farmasi, dan finansial dalam satu platform.</p>
+{% block title %}MediCore Hospital System{% endblock %}
 
-      <div class="action-buttons">
-        {% if request.user.is_authenticated %}
-          <a href="{% url 'auth_app:profile' %}" class="btn btn-primary">Go to Profile</a>
+{% block content %}
+<section class="hero-panel home-hero">
+    <div>
+        <p class="eyebrow">Hospital Information System</p>
+        <h1 class="hero-title">MediCore Hospital System</h1>
+        <p class="hero-copy">Portal terpadu untuk appointment pasien, rekam medis terenkripsi, resep, dan alur operasional rumah sakit berbasis role.</p>
 
-          {% if request.user.staff.role == 'CASHIER' %}
-            <a href="{% url 'billing_app:invoice_list' %}" class="btn btn-secondary">Buka Kasir</a>
-          {% endif %}
-        {% else %}
-          <a href="{% url 'auth_app:login' %}" class="btn btn-primary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-              <polyline points="10 17 15 12 10 7" />
-              <line x1="15" y1="12" x2="3" y2="12" />
-            </svg>Sign In
-          </a>
-        {% endif %}
-      </div>
-
-      <div class="features">
-        <div class="feature-card">
-          <h3>Secure Authentication</h3>
-          <p>Dilengkapi proteksi MFA dan Anti-Spoofing.</p>
+        <div class="action-row">
+            {% if request.user.is_authenticated %}
+                {% if request.user.is_patient %}
+                    <a href="{% url 'core_app:patient_dashboard' %}" class="btn btn-primary">Open Patient Dashboard</a>
+                    <a href="{% url 'core_app:patient_request_appointment' %}" class="btn btn-ghost">Request Appointment</a>
+                {% elif current_staff %}
+                    <a href="{% url 'auth_app:profile' %}" class="btn btn-primary">Open Profile</a>
+                    {% if current_staff.role == 'REGISTRATION' %}
+                        <a href="{% url 'medical_app:appointment_create' %}" class="btn btn-ghost">Create Appointment</a>
+                    {% elif current_staff.role == 'PHARMACIST' %}
+                        <a href="{% url 'pharmacy_app:prescription_list' %}" class="btn btn-ghost">Prescription Queue</a>
+                    {% elif current_staff.role == 'CASHIER' %}
+                        <a href="{% url 'billing_app:invoice_list' %}" class="btn btn-ghost">Open Billing</a>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'auth_app:profile' %}" class="btn btn-primary">Open Profile</a>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'auth_app:login' %}" class="btn btn-primary">Sign In</a>
+                <a href="{% url 'core_app:patient_register' %}" class="btn btn-ghost">Patient Registration</a>
+            {% endif %}
         </div>
-        <div class="feature-card">
-          <h3>Medical Records</h3>
-          <p>Data medis dienkripsi menggunakan standar AES.</p>
+    </div>
+
+    <aside class="home-status" aria-label="System security status">
+        <span class="badge badge-enabled">Secure Mode</span>
+        <strong>Role-based access is active</strong>
+        <p class="muted">Login, CSRF, lockout, and encrypted record flows are guarded by server-side checks.</p>
+    </aside>
+</section>
+
+<section class="grid grid-3 spaced-top">
+    <article class="content-card">
+        <p class="eyebrow">Patients</p>
+        <h2 class="section-title">Appointment Portal</h2>
+        <p class="muted">Pasien dapat request appointment, melihat riwayat encounter, dan memantau invoice.</p>
+    </article>
+    <article class="content-card">
+        <p class="eyebrow">Doctors</p>
+        <h2 class="section-title">Encrypted Records</h2>
+        <p class="muted">Dokter membuat rekam medis dan resep melalui akses yang dibatasi sesuai encounter.</p>
+    </article>
+    <article class="content-card">
+        <p class="eyebrow">Pharmacy</p>
+        <h2 class="section-title">Prescription Control</h2>
+        <p class="muted">Apoteker memvalidasi tanda tangan resep dan mencatat dispense dengan audit trail.</p>
+    </article>
+</section>
+
+<section class="content-card spaced-top">
+    <div class="section-split">
+        <div>
+            <p class="eyebrow">Security Checklist</p>
+            <h2 class="section-title">General TC Coverage</h2>
+            <p class="muted">Alur utama non-billing diuji untuk SQL injection, XSS/HTML/SSTI, broken authentication, dan CSRF.</p>
         </div>
-        <div class="feature-card">
-          <h3>Strict Billing</h3>
-          <p>Sistem validasi OCL anti manipulasi finansial.</p>
+        <div class="badge-list" aria-label="Security test categories">
+            <span class="badge">SQLi</span>
+            <span class="badge">XSS</span>
+            <span class="badge">Auth</span>
+            <span class="badge">CSRF</span>
         </div>
-      </div>
-    </main>
-  </body>
-</html>
+    </div>
+</section>
+{% endblock %}

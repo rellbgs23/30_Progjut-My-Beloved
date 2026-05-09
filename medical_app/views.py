@@ -1,10 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 
-from auth_app.decorators import staff_role_required
+from auth_app.decorators import deny_to_home, staff_role_required
 from auth_app.models import Staff
 
 from .forms import AppointmentForm, MedicalRecordEntryForm
@@ -16,6 +15,12 @@ def get_current_staff(request):
         return request.user.staff
     except Staff.DoesNotExist:
         return None
+
+
+def format_validation_error(error):
+    if hasattr(error, "messages"):
+        return " ".join(error.messages)
+    return str(error)
 
 
 @login_required
@@ -49,7 +54,10 @@ def create_appointment(request):
                 messages.success(request, "Appointment created successfully.")
                 return redirect("medical_app:appointment_detail", appointment_id=appointment.id)
             except ValidationError as error:
-                messages.error(request, error)
+                messages.error(
+                    request,
+                    f"Appointment could not be created: {format_validation_error(error)}",
+                )
 
     else:
         form = AppointmentForm()
@@ -64,7 +72,7 @@ def appointment_detail(request, appointment_id):
     staff = get_current_staff(request)
 
     if staff is None:
-        return HttpResponseForbidden("Staff account required.")
+        return deny_to_home(request, "Staff account required.")
 
     allowed = staff.role in ["REGISTRATION", "DOCTOR"]
 
@@ -72,7 +80,7 @@ def appointment_detail(request, appointment_id):
         allowed = False
 
     if not allowed:
-        return HttpResponseForbidden("Access denied.")
+        return deny_to_home(request, "Access denied for your role.")
 
     return render(request, "medical_app/appointment_detail.html", {
         "appointment": appointment,
@@ -86,7 +94,7 @@ def create_medical_record(request, encounter_id):
     staff = get_current_staff(request)
 
     if encounter.staff_id != staff.id:
-        return HttpResponseForbidden("You can only write records for your own encounter.")
+        return deny_to_home(request, "Access denied for this encounter.")
 
     if request.method == "POST":
         form = MedicalRecordEntryForm(request.POST)
@@ -116,7 +124,7 @@ def medical_record_detail(request, record_id):
     staff = get_current_staff(request)
 
     if record.encounter.staff_id != staff.id:
-        return HttpResponseForbidden("You can only read your own patient's medical record.")
+        return deny_to_home(request, "Access denied for this medical record.")
 
     decrypted_data = record.decrypt_data()
 

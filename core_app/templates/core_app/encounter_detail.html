@@ -1,59 +1,73 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Encounter Detail</title>
-    <style>
-        body{font-family:Inter, system-ui, -apple-system, Roboto, Arial;margin:0;background:#f8fbfc;color:#071124}
-        .wrap{max-width:900px;margin:28px auto;padding:18px}
-        .card{background:#fff;padding:18px;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.06)}
-        h1{margin:0 0 12px}
-        .grid{display:grid;grid-template-columns:1fr 320px;gap:16px}
-        .meta{color:#6b7280}
-        .pres li{margin-bottom:6px}
-        @media(max-width:820px){.grid{grid-template-columns:1fr}}
-    </style>
-</head>
-<body>
-    <div class="wrap">
-        <h1>Encounter Detail</h1>
-        <div class="card">
-            <div class="grid">
-                <section>
-                    <p class="meta">Date: <strong>{{ encounter.dateTime }}</strong></p>
-                    <p class="meta">Doctor: <strong>{{ encounter.staff.name }}</strong></p>
-                    <p class="meta">Complaint: <strong>{{ encounter.complaint }}</strong></p>
+{% extends "base.html" %}
 
-                    <hr style="margin:14px 0;border:none;border-top:1px solid #eef4f4" />
-                    <h3>Medical Record</h3>
-                    {% if record %}
-                        <p><strong>Diagnosis:</strong> {{ diagnosis }}</p>
-                        <p><strong>Treatment Plan:</strong> {{ treatment_plan }}</p>
-                    {% else %}
-                        <p class="meta">No medical record yet.</p>
-                    {% endif %}
+{% block title %}Encounter Detail - MediCore HIS{% endblock %}
 
-                    <h3 style="margin-top:12px">Prescription</h3>
-                    {% if prescription %}
-                        <p class="meta">Status: <strong>{{ prescription.status }}</strong></p>
-                        <ul class="pres">
-                            {% for item in prescription.items.all %}
-                                <li>{{ item.medicineName }} — {{ item.dosage }} — qty {{ item.quantity }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="meta">No prescription issued.</p>
-                    {% endif %}
-                </section>
+{% block page_header %}
+<section class="page-header">
+    <p class="eyebrow">Patient Portal</p>
+    <h1 class="page-title">Encounter Detail</h1>
+    <p class="page-subtitle">Visit information, medical record summary, and prescription status.</p>
+</section>
+{% endblock %}
 
-                <aside>
-                    <div class="meta"><strong>Encounter Info</strong></div>
-                    <div style="margin-top:8px;color:#6b7280">ID: {{ encounter.id }}</div>
-                    <div style="margin-top:8px"><a href="{% url 'core_app:patient_encounters' %}">Back to medical history</a></div>
-                </aside>
+{% block content %}
+<div class="grid grid-sidebar">
+    <section class="content-card">
+        <h2 class="section-title">Visit Summary</h2>
+        <dl class="data-list">
+            <div class="data-row">
+                <dt class="data-label">Date</dt>
+                <dd class="data-value">{{ encounter.dateTime }}</dd>
             </div>
+            <div class="data-row">
+                <dt class="data-label">Doctor</dt>
+                <dd class="data-value">{{ encounter.staff.name }}</dd>
+            </div>
+            <div class="data-row">
+                <dt class="data-label">Complaint</dt>
+                <dd class="data-value">{{ encounter.complaint }}</dd>
+            </div>
+        </dl>
+
+        <div class="divider"></div>
+        <h2 class="section-title">Medical Record</h2>
+        {% if record %}
+            <dl class="data-list">
+                <div class="data-row">
+                    <dt class="data-label">Diagnosis</dt>
+                    <dd class="data-value">{{ diagnosis }}</dd>
+                </div>
+                <div class="data-row">
+                    <dt class="data-label">Treatment Plan</dt>
+                    <dd class="data-value">{{ treatment_plan }}</dd>
+                </div>
+            </dl>
+        {% else %}
+            <p class="empty-state">No medical record yet.</p>
+        {% endif %}
+    </section>
+
+    <aside class="content-card">
+        <h2 class="section-title">Prescription</h2>
+        {% if prescription %}
+            <p><span class="badge badge-{{ prescription.status|lower }}">{{ prescription.status }}</span></p>
+            <ul class="list-stack">
+                {% for item in prescription.items.all %}
+                    <li class="list-item">
+                        <div>
+                            <strong>{{ item.medicineName }}</strong>
+                            <div class="muted">{{ item.dosage }} | Qty {{ item.quantity }}</div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-state">No prescription issued.</p>
+        {% endif %}
+
+        <div class="action-row">
+            <a class="btn btn-ghost" href="{% url 'core_app:patient_encounters' %}">Back to History</a>
         </div>
-    </div>
-</body>
-</html>
+    </aside>
+</div>
+{% endblock %}

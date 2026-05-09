@@ -1,8 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 
+from auth_app.models import Staff
 from billing_app.models import Invoice
 from medical_app.models import Appointment, Encounter, MedicalRecordEntry, Patient
 from pharmacy_app.models import Prescription
@@ -10,27 +10,36 @@ from pharmacy_app.models import Prescription
 from .forms import PatientAppointmentRequestForm, SelfRegistrationForm
 
 def home_view(request):
-    return render(request, 'core_app/home.html')
+	current_staff = None
+	if request.user.is_authenticated and not request.user.is_patient:
+		try:
+			current_staff = request.user.staff
+		except Staff.DoesNotExist:
+			current_staff = None
+
+	return render(request, 'core_app/home.html', {"current_staff": current_staff})
 
 
 def _get_patient_or_forbidden(request):
 	if not request.user.is_authenticated:
-		return None, HttpResponseForbidden("Authentication required.")
+		messages.error(request, "Please sign in before accessing the patient portal.")
+		return None, redirect("auth_app:login")
 
 	if not request.user.is_patient:
-		return None, HttpResponseForbidden("Access denied.")
+		messages.error(request, "Access denied for your role.")
+		return None, redirect("landing_page")
 
 	try:
 		return request.user.patient, None
 	except Patient.DoesNotExist:
-		return None, HttpResponseForbidden("Patient profile not found.")
+		messages.error(request, "Patient profile not found.")
+		return None, redirect("landing_page")
 
 
 def self_register(request):
 	if request.user.is_authenticated:
-		if request.user.is_patient:
-			return redirect("core_app:patient_dashboard")
-		return redirect("auth_app:profile")
+		messages.info(request, "Anda sudah login.")
+		return redirect("landing_page")
 
 	if request.method == "POST":
 		form = SelfRegistrationForm(request.POST)

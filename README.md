@@ -50,9 +50,8 @@ Repositori ini berisi implementasi Tugas 3 Kelompok untuk mata kuliah Pengantar 
 5. Jalankan migrasi dan seed data.
 
    ```bash
-   python manage.py makemigrations
    python manage.py migrate
-   python manage.py seed_db
+   python seed_data.py
    ```
 
 6. Jalankan server lokal.
@@ -75,6 +74,7 @@ Fitur utama:
 - Pembuatan, validasi, dan dispensing resep oleh `DOCTOR` dan `PHARMACIST`.
 - Proses pembayaran invoice oleh `CASHIER`.
 - Enkripsi data medis sensitif sebelum disimpan ke database.
+- Base layout dan CSS bersama untuk halaman non-billing agar navigasi, alert, form, tabel, dan card konsisten.
 
 Role pengguna:
 
@@ -243,7 +243,8 @@ Test case yang dicakup:
 - Kami membedakan staff internal dan pasien eksternal lewat `mfaEnabled` dan `is_patient`.
 - Kami memakai `django.contrib.auth.logout()` untuk logout dan membatasi endpoint logout agar hanya menerima `POST`.
 - Kami mengatur session agar berakhir saat browser ditutup dan memiliki umur 30 menit melalui `SESSION_COOKIE_AGE = 1800`.
-- Kami menerapkan RBAC dengan `login_required`, `user_passes_test`, dan decorator `staff_role_required`.
+- Kami menerapkan RBAC dengan `login_required`, decorator `staff_role_required`, helper access-denied terpusat, dan pengecekan ownership pada data pasien/dokter.
+- Login gagal dan access denied diarahkan kembali ke halaman home dengan flash message yang konsisten, tanpa membuka data atau fitur yang dilarang.
 
 Password hashing bawaan Django dipakai karena format hash Django menyertakan algoritma, salt, dan iterasi. Bila database terbaca pihak tidak berwenang, password asli tidak langsung tersedia. `authenticate()` juga menjaga proses verifikasi tetap berada pada mekanisme resmi Django, bukan perbandingan manual.
 
@@ -291,20 +292,26 @@ def staff_role_required(*allowed_roles):
 Secure, diambil dari `auth_app/decorators.py`:
 
 ```python
+def deny_to_home(request, message="Access denied."):
+    messages.error(request, message)
+    return redirect("landing_page")
+
+
 def staff_role_required(*allowed_roles):
     def decorator(view_func):
         @wraps(view_func)
         def wrapper(request, *args, **kwargs):
             if not request.user.is_authenticated:
-                return HttpResponseForbidden("Authentication required.")
+                messages.error(request, "Please sign in before accessing that page.")
+                return redirect("auth_app:login")
 
             try:
                 staff = request.user.staff
             except Staff.DoesNotExist:
-                return HttpResponseForbidden("Staff account required.")
+                return deny_to_home(request, "Staff account required.")
 
             if staff.role not in allowed_roles:
-                return HttpResponseForbidden("Access denied.")
+                return deny_to_home(request, "Access denied for your role.")
 
             return view_func(request, *args, **kwargs)
 
@@ -446,7 +453,7 @@ Secure, diambil dari `auth_app/templates/auth_app/login.html`:
 | --- | --- | --- | --- |
 | TC-BA-01 | Cek password user di database | Password tersimpan sebagai hash Django, bukan plaintext | Screenshot database/admin/shell |
 | TC-BA-02 | Login gagal 5 kali berturut-turut | Akun terkunci selama 15 menit | Screenshot pesan akun terkunci |
-| TC-BA-03 | Logout lalu akses endpoint protected | User diarahkan ke login atau menerima 403 | Screenshot setelah akses ulang endpoint |
+| TC-BA-03 | Logout lalu akses endpoint protected | User diarahkan ke login, atau access denied diarahkan ke home dengan pesan | Screenshot setelah akses ulang endpoint |
 
 ### CSRF
 
@@ -467,25 +474,28 @@ Secure, diambil dari `auth_app/templates/auth_app/login.html`:
 - [ ] Screenshot validasi allowlist backend pada registrasi pasien untuk `TC-CI-03`.
 - [ ] Screenshot password user di database/shell yang berbentuk hash untuk `TC-BA-01`.
 - [ ] Screenshot akun terkunci setelah 5 kali gagal login untuk `TC-BA-02`.
-- [ ] Screenshot akses endpoint protected setelah logout untuk `TC-BA-03`.
+- [ ] Screenshot akses endpoint protected setelah logout atau role ditolak untuk `TC-BA-03`.
 - [ ] Screenshot inspect element form POST yang menunjukkan `csrfmiddlewaretoken` untuk `TC-CSRF-01`.
 - [ ] Screenshot request POST tanpa CSRF token yang menghasilkan HTTP 403 untuk `TC-CSRF-02`.
 - [ ] Screenshot pengujian cross-origin/same-origin policy untuk `TC-CSRF-03`.
-- [ ] Screenshot dashboard masing-masing role: patient, doctor, pharmacist, cashier.
-- [ ] Screenshot halaman access denied/403 saat role mencoba membuka endpoint yang bukan haknya.
+- [ ] Screenshot dashboard/entry point masing-masing role: patient, registration, doctor, pharmacist, cashier.
+- [ ] Screenshot pesan access denied di home saat role mencoba membuka endpoint yang bukan haknya.
+- [ ] Screenshot konsistensi navbar/logo dan base design pada halaman non-billing utama.
 
 ## E. Catatan Verifikasi Lokal
 
 Test otomatis yang relevan dapat dijalankan dengan:
 
 ```bash
-python manage.py test
+python manage.py test auth_app core_app medical_app pharmacy_app
 ```
 
 Beberapa test yang mendukung rubrik:
 
 - `auth_app.tests.AuthSecurityTests.test_account_locked_after_five_failed_attempts`
 - `auth_app.tests.AuthSecurityTests.test_locked_account_cannot_login_even_with_correct_password`
+- `auth_app.tests.AuthSecurityTests.test_wrong_password_redirects_home_with_message`
+- `auth_app.tests.AuthSecurityTests.test_logout_requires_post_csrf_token_when_enforced`
 - `core_app.tests.PatientPortalTests.test_self_registration_rejects_script_payload`
 - `core_app.tests.PatientPortalTests.test_patient_cannot_access_other_patient_encounter`
 - `medical_app.tests.MedicalSecurityTests.test_invalid_uuid_payload_does_not_execute_sql_injection`

@@ -27,6 +27,11 @@ class UserAccount(AbstractUser):
     def is_locked(self):
         return self.lockedUntil is not None and self.lockedUntil > timezone.now()
 
+    def lock_remaining_seconds(self):
+        if not self.is_locked():
+            return 0
+        return max(0, int((self.lockedUntil - timezone.now()).total_seconds()))
+
     def lock_account(self, minutes=15):
         self.lockedUntil = timezone.now() + timezone.timedelta(minutes=minutes)
         self.save(update_fields=["failedLoginAttempts", "lockedUntil"])

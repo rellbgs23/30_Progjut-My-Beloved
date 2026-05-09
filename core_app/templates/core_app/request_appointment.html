@@ -1,43 +1,25 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Request Appointment</title>
-    <style>
-        body{font-family:Inter, system-ui, -apple-system, Roboto, Arial;margin:0;background:#eef6f5;color:#071124}
-        .wrap{max-width:720px;margin:28px auto;padding:18px}
-        .card{background:#fff;padding:18px;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.06)}
-        h1{margin:0 0 10px}
-        .submit{background:#0f766e;color:#fff;padding:10px 14px;border-radius:10px;border:0;font-weight:600}
-        .messages .msg{background:#fef3c7;padding:10px;border-radius:8px;color:#92400e}
-    </style>
-</head>
-<body>
-    <div class="wrap">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <h1>Request Appointment</h1>
-            <a href="{% url 'core_app:patient_appointments' %}">My appointments</a>
-        </div>
+{% extends "base.html" %}
 
-        <div class="card">
-            {% if messages %}
-                <div class="messages">
-                    {% for message in messages %}
-                        <div class="msg">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
+{% block title %}Request Appointment - MediCore HIS{% endblock %}
 
-            <form method="post" novalidate>
-                {% csrf_token %}
-                {{ form.as_p }}
-                <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
-                    <button type="submit" class="submit">Create Appointment</button>
-                    <a href="{% url 'core_app:patient_dashboard' %}" style="color:#0f766e;text-decoration:none">Back to dashboard</a>
-                </div>
-            </form>
+{% block page_header %}
+<section class="page-header">
+    <p class="eyebrow">Patient Portal</p>
+    <h1 class="page-title">Request Appointment</h1>
+    <p class="page-subtitle">Choose a doctor and submit your preferred appointment time.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="content-card">
+    <form method="post" class="form-panel" novalidate>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="action-row">
+            <button type="submit" class="btn btn-primary">Create Appointment</button>
+            <a class="btn btn-ghost" href="{% url 'core_app:patient_appointments' %}">My Appointments</a>
+            <a class="btn btn-ghost" href="{% url 'core_app:patient_dashboard' %}">Back to Dashboard</a>
         </div>
-    </div>
-</body>
-</html>
+    </form>
+</section>
+{% endblock %}

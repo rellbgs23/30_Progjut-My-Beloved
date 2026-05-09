@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 
@@ -8,8 +9,34 @@ from .forms import SecureLoginForm
 from .models import UserAccount
 
 
+MAX_FAILED_LOGIN_ATTEMPTS = 5
+LOCKOUT_MINUTES = 15
+
+
+def _login_failure(request, message):
+    messages.error(request, message)
+    return redirect("landing_page")
+
+
+def _remaining_attempts_message(remaining_attempts):
+    return (
+        "Username atau password salah. "
+        f"Sisa percobaan sebelum akun terkunci: {remaining_attempts}."
+    )
+
+
+def _lockout_message(user):
+    remaining_seconds = user.lock_remaining_seconds()
+    remaining_minutes = max(1, (remaining_seconds + 59) // 60)
+    return f"Akun terkunci sementara. Coba lagi dalam {remaining_minutes} menit."
+
+
 @csrf_protect
 def login_view(request):
+    if request.user.is_authenticated:
+        messages.info(request, "Anda sudah login.")
+        return redirect("landing_page")
+
     if request.method == "POST":
         form = SecureLoginForm(request.POST)
 
@@ -20,29 +47,33 @@ def login_view(request):
             try:
                 user_obj = UserAccount.objects.get(username=username)
             except UserAccount.DoesNotExist:
-                messages.error(request, "Username atau password salah.")
-                return render(request, "auth_app/login.html", {"form": form})
+                return _login_failure(
+                    request,
+                    _remaining_attempts_message(MAX_FAILED_LOGIN_ATTEMPTS - 1),
+                )
 
             if user_obj.is_locked():
-                messages.error(request, "Akun terkunci sementara. Coba lagi nanti.")
-                return render(request, "auth_app/login.html", {"form": form})
+                return _login_failure(request, _lockout_message(user_obj))
+
+            if user_obj.lockedUntil is not None and user_obj.lockedUntil <= timezone.now():
+                user_obj.reset_failed_login()
 
             user = authenticate(request, username=username, password=password)
 
             if user is None:
                 user_obj.failedLoginAttempts += 1
 
-                if user_obj.failedLoginAttempts >= 5:
-                    user_obj.lock_account(minutes=15)
+                if user_obj.failedLoginAttempts >= MAX_FAILED_LOGIN_ATTEMPTS:
+                    user_obj.lock_account(minutes=LOCKOUT_MINUTES)
+                    return _login_failure(request, _lockout_message(user_obj))
                 else:
                     user_obj.save(update_fields=["failedLoginAttempts"])
 
-                messages.error(request, "Username atau password salah.")
-                return render(request, "auth_app/login.html", {"form": form})
+                remaining_attempts = MAX_FAILED_LOGIN_ATTEMPTS - user_obj.failedLoginAttempts
+                return _login_failure(request, _remaining_attempts_message(remaining_attempts))
 
             if not user.authenticate_mfa():
-                messages.error(request, "Login ditolak. MFA belum aktif.")
-                return render(request, "auth_app/login.html", {"form": form})
+                return _login_failure(request, "Login ditolak. MFA belum aktif.")
 
             user.reset_failed_login()
             login(request, user)
@@ -72,10 +103,5 @@ def profile_view(request):
 
 
 def access_denied_view(request):
-    """Render a simple Access Denied page with HTTP 403 status.
-
-    This page is used as the `login_url` target for `user_passes_test`
-    decorators when a logged-in user does not have the required role.
-    Returning status 403 makes it clear to clients and security tooling.
-    """
-    return render(request, "auth_app/denied.html", status=403)
+    messages.error(request, "Access denied for your role.")
+    return redirect("landing_page")

@@ -1,43 +1,24 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Patient Self Registration</title>
-    <style>
-        :root{--accent:#0f766e;--bg:#f7fafc;--card:#fff}
-        body{font-family:Inter, system-ui, -apple-system, Roboto, Arial;margin:0;background:var(--bg);color:#071124}
-        .wrap{max-width:760px;margin:32px auto;padding:18px}
-        .card{background:var(--card);padding:20px;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.06)}
-        h1{margin:0 0 10px}
-        form{margin-top:12px}
-        .form-row{display:flex;gap:12px}
-        .submit{display:inline-block;padding:10px 14px;background:var(--accent);color:#fff;border-radius:10px;border:0;font-weight:600}
-        .messages{margin-bottom:12px}
-        .msg{padding:10px;border-radius:8px;background:#fffbeb;color:#92400e}
-    </style>
-</head>
-<body>
-    <div class="wrap">
-        <div class="card">
-            <h1>Patient Self Registration</h1>
-            {% if messages %}
-                <div class="messages" role="status">
-                    {% for message in messages %}
-                        <div class="msg">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
+{% extends "base.html" %}
 
-            <form method="post" novalidate>
-                {% csrf_token %}
-                {{ form.as_p }}
-                <div style="margin-top:12px">
-                    <button type="submit" class="submit">Register</button>
-                    <a style="margin-left:12px;color:#0f766e;text-decoration:none" href="{% url 'auth_app:login' %}">Back to login</a>
-                </div>
-            </form>
+{% block title %}Patient Registration - MediCore HIS{% endblock %}
+
+{% block page_header %}
+<section class="page-header">
+    <p class="eyebrow">Patient Portal</p>
+    <h1 class="page-title">Patient Self Registration</h1>
+    <p class="page-subtitle">Create a patient account to request appointments and view your records.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="content-card">
+    <form method="post" class="form-panel" novalidate>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="action-row">
+            <button type="submit" class="btn btn-primary">Register</button>
+            <a class="btn btn-ghost" href="{% url 'auth_app:login' %}">Back to Login</a>
         </div>
-    </div>
-</body>
-</html>
+    </form>
+</section>
+{% endblock %}

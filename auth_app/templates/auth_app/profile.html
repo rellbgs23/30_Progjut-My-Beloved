@@ -1,531 +1,67 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile — Hospital System</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+{% extends "base.html" %}
 
-        :root {
-            --navy:        #0b1f3a;
-            --navy-mid:    #122848;
-            --teal:        #0d7377;
-            --teal-light:  #14a085;
-            --teal-pale:   #e8f5f5;
-            --cream:       #f5f2ec;
-            --warm-white:  #fdfcfa;
-            --surface:     #f8fafb;
-            --muted:       #7a8a9a;
-            --muted-light: #a8b6c2;
-            --border:      #d6dde6;
-            --border-soft: #edf1f5;
-            --text:        #1a2a3a;
-            --shadow-sm:   0 2px 8px rgba(11,31,58,0.07);
-            --shadow-md:   0 8px 32px rgba(11,31,58,0.11);
-            --shadow-lg:   0 20px 60px rgba(11,31,58,0.14);
-        }
+{% block title %}Profile - MediCore HIS{% endblock %}
 
-        html, body {
-            min-height: 100%;
-        }
+{% block page_header %}
+<section class="page-header">
+    <p class="eyebrow">Account</p>
+    <h1 class="page-title">My Profile</h1>
+    <p class="page-subtitle">Account details, role information, and session controls.</p>
+</section>
+{% endblock %}
 
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background-color: var(--surface);
-            color: var(--text);
-            line-height: 1.6;
-        }
-
-        /* ── Top Navigation ─────────────────────────────────── */
-        .topbar {
-            background: var(--navy);
-            padding: 0 32px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 12px rgba(11,31,58,0.25);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .topbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-        }
-
-        .topbar-icon {
-            width: 34px;
-            height: 34px;
-            background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
-            border-radius: 9px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            box-shadow: 0 2px 10px rgba(13,115,119,0.4);
-        }
-
-        .topbar-icon svg {
-            width: 18px;
-            height: 18px;
-            fill: none;
-            stroke: #fff;
-            stroke-width: 2.2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        .topbar-name {
-            font-family: 'Crimson Pro', Georgia, serif;
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #fff;
-            letter-spacing: 0.01em;
-        }
-
-        .topbar-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .topbar-user-pill {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 999px;
-            padding: 5px 14px 5px 8px;
-        }
-
-        .avatar {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.72rem;
-            font-weight: 500;
-            color: #fff;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            flex-shrink: 0;
-        }
-
-        .topbar-username {
-            font-size: 0.825rem;
-            color: rgba(255,255,255,0.75);
-            font-weight: 400;
-        }
-
-        /* ── Page Layout ─────────────────────────────────────── */
-        .page-wrapper {
-            max-width: 680px;
-            margin: 0 auto;
-            padding: 44px 24px 60px;
-            animation: fadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .page-title {
-            font-family: 'Crimson Pro', Georgia, serif;
-            font-size: 2rem;
-            font-weight: 600;
-            color: var(--navy);
-            letter-spacing: -0.015em;
-            margin-bottom: 4px;
-        }
-
-        .page-subtitle {
-            font-size: 0.875rem;
-            color: var(--muted);
-            font-weight: 300;
-            margin-bottom: 32px;
-        }
-
-        /* ── Card ────────────────────────────────────────────── */
-        .card {
-            background: #fff;
-            border-radius: 18px;
-            border: 1px solid var(--border-soft);
-            box-shadow: var(--shadow-md);
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        .card-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 18px 24px 14px;
-            border-bottom: 1px solid var(--border-soft);
-        }
-
-        .card-label-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            background: var(--teal-pale);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .card-label-icon svg {
-            width: 16px;
-            height: 16px;
-            fill: none;
-            stroke: var(--teal);
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        .card-label-text {
-            font-size: 0.78rem;
-            font-weight: 500;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--muted);
-        }
-
-        /* ── Data rows ───────────────────────────────────────── */
-        .data-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--border-soft);
-            transition: background 0.15s;
-        }
-
-        .data-row:last-child {
-            border-bottom: none;
-        }
-
-        .data-row:hover {
-            background: #fafcfd;
-        }
-
-        .data-row-label {
-            font-size: 0.82rem;
-            color: var(--muted);
-            font-weight: 400;
-            flex-shrink: 0;
-            min-width: 130px;
-        }
-
-        .data-row-value {
-            font-size: 0.925rem;
-            color: var(--text);
-            font-weight: 500;
-            text-align: right;
-        }
-
-        /* MFA badge */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 3px 10px 3px 8px;
-            border-radius: 999px;
-            font-size: 0.78rem;
-            font-weight: 500;
-            letter-spacing: 0.01em;
-        }
-
-        .badge-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .badge-green {
-            background: #e6f7f1;
-            color: #1a7a52;
-        }
-
-        .badge-green .badge-dot { background: #22c47a; }
-
-        .badge-red {
-            background: #fff0f0;
-            color: #b03030;
-        }
-
-        .badge-red .badge-dot { background: #e05454; }
-
-        /* Role chip */
-        .role-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--teal-pale);
-            color: var(--teal);
-            border: 1px solid rgba(13,115,119,0.18);
-            border-radius: 8px;
-            padding: 4px 11px;
-            font-size: 0.82rem;
-            font-weight: 500;
-        }
-
-        /* ── Staff section (conditional) ─────────────────────── */
-        .staff-section {
-            animation: fadeUp 0.55s 0.08s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        /* ── Danger zone / logout ────────────────────────────── */
-        .logout-section {
-            animation: fadeUp 0.55s 0.14s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        .logout-section .card {
-            background: #fffaf9;
-            border-color: #f0e0dc;
-        }
-
-        .logout-section .card-label {
-            border-color: #f0e0dc;
-        }
-
-        .logout-section .card-label-icon {
-            background: #fdecea;
-        }
-
-        .logout-section .card-label-icon svg {
-            stroke: #c0392b;
-        }
-
-        .logout-section .card-label-text {
-            color: #b85040;
-        }
-
-        .logout-content {
-            padding: 18px 24px 22px;
-        }
-
-        .logout-description {
-            font-size: 0.85rem;
-            color: var(--muted);
-            margin-bottom: 18px;
-            line-height: 1.55;
-        }
-
-        .btn-logout {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 22px;
-            background: transparent;
-            border: 1.5px solid #d45040;
-            color: #c0392b;
-            border-radius: 9px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.16s, color 0.16s, box-shadow 0.16s, transform 0.13s;
-            letter-spacing: 0.01em;
-        }
-
-        .btn-logout svg {
-            width: 15px;
-            height: 15px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            flex-shrink: 0;
-        }
-
-        .btn-logout:hover {
-            background: #c0392b;
-            color: #fff;
-            box-shadow: 0 4px 14px rgba(192,57,43,0.28);
-            transform: translateY(-1px);
-        }
-
-        .btn-logout:active {
-            transform: translateY(0);
-        }
-
-        /* ── Responsive ──────────────────────────────────────── */
-        @media (max-width: 600px) {
-            .topbar {
-                padding: 0 18px;
-            }
-
-            .topbar-name {
-                font-size: 1.05rem;
-            }
-
-            .page-wrapper {
-                padding: 28px 16px 48px;
-            }
-
-            .page-title {
-                font-size: 1.65rem;
-            }
-
-            .data-row {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
-                padding: 14px 20px;
-            }
-
-            .data-row-value {
-                text-align: left;
-            }
-
-            .data-row-label {
-                min-width: unset;
-            }
-
-            .card-label,
-            .logout-content {
-                padding-left: 20px;
-                padding-right: 20px;
-            }
-        }
-    </style>
-</head>
-<body>
-
-    <!-- Top navigation bar -->
-    <header class="topbar" role="banner">
-        <a class="topbar-brand" href="#" aria-label="MediCore Hospital System">
-            <div class="topbar-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="9" y="2" width="6" height="20" rx="1.5" fill="white" stroke="none"/>
-                    <rect x="2" y="9" width="20" height="6" rx="1.5" fill="white" stroke="none"/>
-                </svg>
-            </div>
-            <span class="topbar-name">MediCore</span>
-        </a>
-
-        <div class="topbar-right">
-            <div class="topbar-user-pill" aria-label="Logged in as {{ request.user.username }}">
-                <div class="avatar" aria-hidden="true">
-                    {{ request.user.username|slice:":2" }}
-                </div>
-                <span class="topbar-username">{{ request.user.username }}</span>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main content -->
-    <main class="page-wrapper" role="main">
-
-        <h1 class="page-title">My Profile</h1>
-        <p class="page-subtitle">Account details and security settings</p>
-
-        <!-- Account information card -->
-        <div class="card" role="region" aria-label="Account Information">
-            <div class="card-label">
-                <div class="card-label-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                </div>
-                <span class="card-label-text">Account Information</span>
-            </div>
-
+{% block content %}
+<div class="grid grid-sidebar">
+    <section class="content-card">
+        <h2 class="section-title">Account Information</h2>
+        <dl class="data-list">
             <div class="data-row">
-                <span class="data-row-label">Username</span>
-                <span class="data-row-value">{{ request.user.username }}</span>
+                <dt class="data-label">Username</dt>
+                <dd class="data-value">{{ request.user.username }}</dd>
             </div>
-
             <div class="data-row">
-                <span class="data-row-label">Two-Factor Auth</span>
-                <span class="data-row-value">
+                <dt class="data-label">Email</dt>
+                <dd class="data-value">{{ request.user.email|default:"-" }}</dd>
+            </div>
+            <div class="data-row">
+                <dt class="data-label">Two-Factor Auth</dt>
+                <dd class="data-value">
                     {% if request.user.mfaEnabled %}
-                        <span class="badge badge-green" aria-label="MFA is enabled">
-                            <span class="badge-dot" aria-hidden="true"></span>
-                            Enabled
-                        </span>
+                        <span class="badge badge-enabled">Enabled</span>
                     {% else %}
-                        <span class="badge badge-red" aria-label="MFA is disabled">
-                            <span class="badge-dot" aria-hidden="true"></span>
-                            Not Enabled
-                        </span>
+                        <span class="badge badge-disabled">Not Enabled</span>
                     {% endif %}
-                </span>
+                </dd>
             </div>
-        </div>
+        </dl>
+    </section>
 
-        <!-- Staff section (conditional) -->
-        {% if request.user.staff %}
-        <div class="card staff-section" role="region" aria-label="Staff Details">
-            <div class="card-label">
-                <div class="card-label-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <aside class="content-card">
+        <h2 class="section-title">Role</h2>
+        {% if request.user.is_patient %}
+            <p><span class="badge">Patient</span></p>
+            <p class="muted">External patient portal account.</p>
+            <a class="btn btn-primary" href="{% url 'core_app:patient_dashboard' %}">Open Dashboard</a>
+        {% elif request.user.staff %}
+            <p><span class="badge">{{ request.user.staff.role }}</span></p>
+            <dl class="data-list">
+                <div class="data-row">
+                    <dt class="data-label">Name</dt>
+                    <dd class="data-value">{{ request.user.staff.name }}</dd>
                 </div>
-                <span class="card-label-text">Staff Details</span>
-            </div>
-
-            <div class="data-row">
-                <span class="data-row-label">Full Name</span>
-                <span class="data-row-value">{{ request.user.staff.name }}</span>
-            </div>
-
-            <div class="data-row">
-                <span class="data-row-label">Role</span>
-                <span class="data-row-value">
-                    <span class="role-chip" aria-label="Role: {{ request.user.staff.role }}">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                        {{ request.user.staff.role }}
-                    </span>
-                </span>
-            </div>
-        </div>
+            </dl>
+        {% else %}
+            <p class="muted">No staff or patient profile is attached to this account.</p>
         {% endif %}
+    </aside>
+</div>
 
-        <!-- Logout / session section -->
-        <div class="logout-section">
-            <div class="card">
-                <div class="card-label">
-                    <div class="card-label-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    </div>
-                    <span class="card-label-text">Session</span>
-                </div>
-
-                <div class="logout-content">
-                    <p class="logout-description">
-                        You are currently signed in. Ending your session will require you to log in again to access the hospital system.
-                    </p>
-                    <form method="post" action="{% url 'auth_app:logout' %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn-logout" aria-label="Sign out of your account">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                            Sign Out
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-</body>
-</html>
+<section class="content-card spaced-top">
+    <h2 class="section-title">Session</h2>
+    <p class="muted">End your session when you are finished using shared or public devices.</p>
+    <form method="post" action="{% url 'auth_app:logout' %}" class="action-row">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Sign Out</button>
+    </form>
+</section>
+{% endblock %}

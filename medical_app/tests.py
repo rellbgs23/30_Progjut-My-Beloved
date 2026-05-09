@@ -95,7 +95,7 @@ class MedicalSecurityTests(TestCase):
             reverse("medical_app:medical_record_detail", args=[record.id])
         )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertRedirects(response, reverse("landing_page"))
 
     def test_doctor_can_create_medical_record_for_own_encounter(self):
         self.client.login(username="doctor1", password="StrongPassword123!")

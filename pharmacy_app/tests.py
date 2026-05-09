@@ -93,7 +93,7 @@ class PharmacySecurityTest(TestCase):
 			reverse('pharmacy_app:validate_prescription', kwargs={'prescription_id': prescription.id}),
 		)
 
-		self.assertEqual(response.status_code, 403)
+		self.assertRedirects(response, reverse('landing_page'))
 
 	def test_dispense_requires_validated_status(self):
 		prescription = Prescription.objects.create(encounter=self.encounter)
