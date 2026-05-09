@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Start Encounter — MediCore{% endblock %}
+
+{% block breadcrumb %}
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'medical_app:doctor_dashboard' %}">Dashboard</a>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <a href="{% url 'medical_app:doctor_appointments' %}">My Appointments</a>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>Start Encounter</span>
+    </nav>
+{% endblock %}
+
+{% block wrapper_class %}narrow{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Start Encounter</h1>
+            <p class="page-subtitle">
+                Patient {{ appointment.patient.name }} &middot; {{ appointment.scheduledAt|date:"d M Y H:i" }}
+            </p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-label">
+            <div class="card-label-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <span class="card-label-text">Chief Complaint</span>
+        </div>
+
+        <form method="post" class="mc-form" novalidate>
+            {% csrf_token %}
+            <div class="form-body">
+                <p>
+                    <label for="complaint">Patient complaint</label>
+                    <textarea id="complaint" name="complaint" rows="5" required
+                              placeholder="Describe the patient's complaint in their own words…"></textarea>
+                </p>
+                <p class="text-small text-muted">
+                    Original appointment reason: &quot;{{ appointment.reason }}&quot;
+                </p>
+            </div>
+            <div class="form-footer">
+                <button type="submit" class="btn btn-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    Start Encounter
+                </button>
+                <a class="btn btn-secondary" href="{% url 'medical_app:doctor_appointments' %}">Cancel</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

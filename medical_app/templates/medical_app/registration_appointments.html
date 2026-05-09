@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}All Appointments — MediCore{% endblock %}
+
+{% block breadcrumb %}
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'medical_app:registration_dashboard' %}">Dashboard</a>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>All Appointments</span>
+    </nav>
+{% endblock %}
+
+{% block wrapper_class %}wide{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">All Appointments</h1>
+            <p class="page-subtitle">Every appointment booked through the system.</p>
+        </div>
+        <a class="btn btn-primary" href="{% url 'medical_app:appointment_create' %}">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            New Appointment
+        </a>
+    </div>
+
+    <div class="card">
+        {% if appointments %}
+            <table class="mc-table">
+                <thead>
+                    <tr>
+                        <th>Scheduled</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appointment in appointments %}
+                        <tr>
+                            <td>{{ appointment.scheduledAt|date:"d M Y H:i" }}</td>
+                            <td>{{ appointment.patient.name }}</td>
+                            <td>Dr. {{ appointment.doctor.name }}</td>
+                            <td>{{ appointment.reason|truncatewords:8 }}</td>
+                            <td>
+                                {% if appointment.status == "SCHEDULED" %}
+                                    <span class="badge badge-indigo"><span class="badge-dot"></span>Scheduled</span>
+                                {% elif appointment.status == "COMPLETED" %}
+                                    <span class="badge badge-green"><span class="badge-dot"></span>Completed</span>
+                                {% elif appointment.status == "CANCELLED" %}
+                                    <span class="badge badge-rose"><span class="badge-dot"></span>Cancelled</span>
+                                {% else %}
+                                    <span class="badge badge-muted"><span class="badge-dot"></span>{{ appointment.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a class="btn btn-secondary btn-sm" href="{% url 'medical_app:appointment_detail' appointment.id %}">View</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="mc-list-empty">No appointments yet.</div>
+        {% endif %}
+    </div>
+{% endblock %}

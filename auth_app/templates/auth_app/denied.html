@@ -1,28 +1,49 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Access Denied</title>
-  <style>
-    body{font-family:Inter, system-ui, -apple-system, Roboto, Arial;margin:0;background:#f3f6f8;color:#071124}
-    .wrap{max-width:760px;margin:60px auto;padding:18px}
-    .card{background:#fff;padding:24px;border-radius:12px;box-shadow:0 12px 40px rgba(2,6,23,0.06);text-align:center}
-    h1{margin:0 0 8px}
-    p{color:#6b7280}
-    a.btn{display:inline-block;margin-top:12px;padding:10px 14px;background:#0f766e;color:#fff;border-radius:10px;text-decoration:none}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="card" role="alert" aria-live="assertive">
-      <h1>Access Denied</h1>
-      <p>You do not have permission to access this page.</p>
-      {% if user.is_authenticated %}
-        <p>Signed in as <strong>{{ user.get_username }}</strong></p>
-      {% endif %}
-      <a class="btn" href="{% url 'auth_app:login' %}">Return to login</a>
+{% extends "base_auth.html" %}
+
+{% block title %}Access Denied — MediCore{% endblock %}
+
+{% block auth_content %}
+    <div class="auth-card-header text-center">
+        <div style="display:inline-flex; width:48px; height:48px; border-radius:50%;
+                    background:var(--rose-pale); align-items:center; justify-content:center;
+                    margin:0 auto 18px;" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                 stroke="var(--rose)" stroke-width="2" stroke-linecap="round"
+                 stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            </svg>
+        </div>
+        <h1>Access Denied</h1>
+        <p>You do not have permission to access this page.</p>
     </div>
-  </div>
-</body>
-</html>
+
+    {% if user.is_authenticated %}
+        <div class="card" style="margin-bottom:20px;">
+            <div class="data-row">
+                <span class="data-row-label">Signed in as</span>
+                <span class="data-row-value">{{ user.get_username }}</span>
+            </div>
+            {% if user.staff %}
+                <div class="data-row">
+                    <span class="data-row-label">Role</span>
+                    <span class="data-row-value">
+                        <span class="role-chip">{{ user.staff.get_role_display }}</span>
+                    </span>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div style="display:flex; gap:10px;">
+        {% if user.is_authenticated %}
+            <a class="btn btn-primary flex-grow" href="{% url 'auth_app:profile' %}">Go to Profile</a>
+            <form method="post" action="{% url 'auth_app:logout' %}" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary">Sign out</button>
+            </form>
+        {% else %}
+            <a class="btn btn-primary full-width" href="{% url 'auth_app:login' %}">Return to login</a>
+        {% endif %}
+    </div>
+{% endblock %}

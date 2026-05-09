@@ -1,56 +1,74 @@
 from decimal import Decimal
+
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Payment
+from django.db.models import Sum
+
+from .models import Invoice, Payment
 
 
 class PaymentForm(forms.ModelForm):
+    """Form untuk mencatat pembayaran oleh kasir.
+
+    Catatan keamanan penting:
+    - Field `processedBy` sengaja TIDAK disertakan. Identitas kasir
+      di-inject di `views.py` dari `request.user.staff` sehingga tidak
+      dapat di-spoof lewat payload form.
+    - Dropdown `invoice` dibatasi hanya invoice yang berstatus UNPAID
+      agar kasir tidak bisa secara tidak sengaja (atau sengaja) memproses
+      pembayaran untuk invoice PAID atau VOID.
+    """
+
     class Meta:
         model = Payment
-        # invoice sengaja ga dimasukkan karena sudah di-handle via URL di views.py
-        fields = ['paidAmount', 'method']
+        fields = ["invoice", "paidAmount", "method"]
 
         widgets = {
-            # min diganti jadi 1000 buat UI di HTML
-            'paidAmount': forms.NumberInput(attrs={'class': 'form-control', 'min': '1000', 'step': '1'}),
-            'method': forms.Select(attrs={'class': 'form-control'}),
+            "paidAmount": forms.NumberInput(
+                attrs={"min": "0.01", "step": "0.01"}
+            ),
         }
 
     def __init__(self, *args, **kwargs):
-        # Ambil instance 'invoice' yang dilempar dari views.py (kalau ada)
-        # Hapus dari kwargs biar nggak error saat manggil super()
-        self.invoice_instance = kwargs.pop('invoice', None)
         super().__init__(*args, **kwargs)
 
-        self.fields['paidAmount'].label = "Nominal Pembayaran (Rp)"
-        self.fields['method'].label = "Metode Pembayaran"
+        self.fields["invoice"].queryset = Invoice.objects.filter(
+            status=Invoice.InvoiceStatus.UNPAID
+        ).order_by("-createdAt")
+
+        self.fields["invoice"].label = "Tagihan (UNPAID)"
+        self.fields["paidAmount"].label = "Nominal Pembayaran (Rp)"
+        self.fields["method"].label = "Metode Pembayaran"
 
     def clean_paidAmount(self):
-        paid_amount = self.cleaned_data.get('paidAmount')
+        paid_amount = self.cleaned_data.get("paidAmount")
 
-        # Aturan baru: validasi minimal bayar Rp 1.000
-        if paid_amount is None or paid_amount < Decimal('1000.00'):
-            raise ValidationError(
-                "Nominal pembayaran minimal adalah Rp 1.000!")
+        if paid_amount is None or paid_amount <= 0:
+            raise ValidationError("Nominal pembayaran harus lebih dari 0.")
 
         return paid_amount
 
     def clean(self):
         cleaned_data = super().clean()
-        paid_amount = cleaned_data.get('paidAmount')
+        paid_amount = cleaned_data.get("paidAmount")
+        invoice = cleaned_data.get("invoice")
 
-        # Cek sisa tagihan langsung di dalam form pakai invoice_instance
-        if paid_amount and self.invoice_instance:
-            current_payments = sum(
-                (p.paidAmount for p in self.invoice_instance.payment_set.all()), Decimal(
-                    '0.00')
-            )
-            remaining_balance = self.invoice_instance.totalAmount - current_payments
+        if paid_amount and invoice:
+            # Dihitung lewat aggregate() alih-alih sum(generator) supaya
+            # tidak N+1 query dan lebih hemat memori ketika invoice punya
+            # banyak payment. Cek otoritatif tetap di views.py dalam
+            # transaksi dengan SELECT ... FOR UPDATE — cek di sini hanya
+            # untuk feedback UI cepat.
+            current_payments = invoice.payment_set.aggregate(
+                total=Sum("paidAmount")
+            )["total"] or Decimal("0.00")
+
+            remaining_balance = invoice.totalAmount - current_payments
 
             if paid_amount > remaining_balance:
                 self.add_error(
-                    'paidAmount',
-                    f"Nominal kelebihan! Sisa tagihan ini cuma Rp{remaining_balance}."
+                    "paidAmount",
+                    f"Nominal kelebihan. Sisa tagihan Rp{remaining_balance}.",
                 )
 
         return cleaned_data

@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="same-origin">
+    <title>{% block title %}MediCore — Hospital Information System{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/medicore.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="auth-page">
+    <div class="auth-wrapper" role="main">
+
+        <div class="auth-brand" aria-label="MediCore Hospital System">
+            <div class="auth-brand-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="9" y="2" width="6" height="20" rx="1.5"/>
+                    <rect x="2" y="9" width="20" height="6" rx="1.5"/>
+                </svg>
+            </div>
+            <span class="auth-brand-name">MediCore</span>
+            <div class="auth-brand-tagline">Hospital Information System</div>
+        </div>
+
+        <div class="auth-card">
+            {% block auth_content %}{% endblock %}
+        </div>
+
+    </div>
+</body>
+</html>

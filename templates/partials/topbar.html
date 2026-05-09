@@ -1,0 +1,100 @@
+{% comment %}
+MediCore site header.
+
+Navigasi kontekstual per role setelah login:
+- Patient:     Dashboard, Appointments, History, Invoices
+- Doctor:      Dashboard, My Appointments, My Encounters
+- Registration: Dashboard, All Appointments, New Appointment
+- Pharmacist:  Prescription Queue
+- Cashier:     Dashboard, Payment Entry
+- Superuser:   nav utama + link admin
+
+Kalau user belum login, topbar menyisakan tombol "Sign In" di kanan.
+{% endcomment %}
+
+<header class="topbar" role="banner">
+    <div class="topbar-left">
+        <a class="topbar-brand" href="{% url 'core_app:home' %}" aria-label="MediCore home">
+            <div class="topbar-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="9" y="2" width="6" height="20" rx="1.5"/>
+                    <rect x="2" y="9" width="20" height="6" rx="1.5"/>
+                </svg>
+            </div>
+            <span class="topbar-name">MediCore</span>
+        </a>
+
+        {% if request.user.is_authenticated %}
+            <div class="topbar-sep" aria-hidden="true"></div>
+            <span class="topbar-section">
+                {% if request.user.is_patient %}
+                    Patient Portal
+                {% elif request.user.staff.role == 'DOCTOR' %}
+                    Doctor
+                {% elif request.user.staff.role == 'PHARMACIST' %}
+                    Pharmacy
+                {% elif request.user.staff.role == 'CASHIER' %}
+                    Cashier
+                {% elif request.user.staff.role == 'REGISTRATION' %}
+                    Registration
+                {% elif request.user.is_superuser %}
+                    Admin
+                {% else %}
+                    Staff
+                {% endif %}
+            </span>
+
+            <nav class="topbar-nav" aria-label="Primary navigation">
+                {% if request.user.is_patient %}
+                    <a href="{% url 'core_app:patient_dashboard' %}" {% if active_nav == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
+                    <a href="{% url 'core_app:patient_appointments' %}" {% if active_nav == 'appointments' %}class="active"{% endif %}>Appointments</a>
+                    <a href="{% url 'core_app:patient_encounters' %}" {% if active_nav == 'encounters' %}class="active"{% endif %}>History</a>
+                    <a href="{% url 'core_app:patient_invoices' %}" {% if active_nav == 'invoices' %}class="active"{% endif %}>Invoices</a>
+
+                {% elif request.user.staff.role == 'DOCTOR' %}
+                    <a href="{% url 'medical_app:doctor_dashboard' %}" {% if active_nav == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
+                    <a href="{% url 'medical_app:doctor_appointments' %}" {% if active_nav == 'appointments' %}class="active"{% endif %}>My Appointments</a>
+                    <a href="{% url 'medical_app:doctor_encounters' %}" {% if active_nav == 'encounters' %}class="active"{% endif %}>My Encounters</a>
+
+                {% elif request.user.staff.role == 'REGISTRATION' %}
+                    <a href="{% url 'medical_app:registration_dashboard' %}" {% if active_nav == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
+                    <a href="{% url 'medical_app:registration_appointments' %}" {% if active_nav == 'appointments' %}class="active"{% endif %}>All Appointments</a>
+                    <a href="{% url 'medical_app:appointment_create' %}" {% if active_nav == 'new_appointment' %}class="active"{% endif %}>New Appointment</a>
+
+                {% elif request.user.staff.role == 'PHARMACIST' %}
+                    <a href="{% url 'pharmacy_app:prescription_list' %}" {% if active_nav == 'dashboard' or active_nav == 'prescriptions' %}class="active"{% endif %}>Prescription Queue</a>
+
+                {% elif request.user.staff.role == 'CASHIER' %}
+                    <a href="{% url 'billing_app:cashier_dashboard' %}" {% if active_nav == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
+                    <a href="{% url 'billing_app:process_payment' %}" {% if active_nav == 'payment' %}class="active"{% endif %}>Payment Entry</a>
+                {% endif %}
+
+                {% if request.user.is_superuser %}
+                    <a href="{% url 'admin:index' %}">Django Admin</a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    </div>
+
+    <div class="topbar-right">
+        {% if request.user.is_authenticated %}
+            <a class="topbar-user-pill" href="{% url 'auth_app:profile' %}" title="View profile">
+                <span class="avatar" aria-hidden="true">{{ request.user.username|slice:":2" }}</span>
+                <span class="topbar-username">{{ request.user.username }}</span>
+            </a>
+            <form method="post" action="{% url 'auth_app:logout' %}" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="topbar-logout" aria-label="Sign out">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    <span>Sign Out</span>
+                </button>
+            </form>
+        {% else %}
+            <a class="topbar-signin" href="{% url 'auth_app:login' %}">Sign In</a>
+        {% endif %}
+    </div>
+</header>

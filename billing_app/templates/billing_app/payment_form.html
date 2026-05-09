@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Process Payment — MediCore{% endblock %}
+
+{% block breadcrumb %}
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <span>Billing</span>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>Payment Entry</span>
+    </nav>
+{% endblock %}
+
+{% block wrapper_class %}narrow{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Payment Entry</h1>
+            <p class="page-subtitle">Process and validate patient invoice payments</p>
+        </div>
+    </div>
+
+    <div class="card" role="region" aria-label="Payment Form">
+        <div class="card-label">
+            <div class="card-label-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <line x1="12" y1="1" x2="12" y2="23"/>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+            </div>
+            <span class="card-label-text">Transaction Details</span>
+        </div>
+
+        <form method="post" class="mc-form" novalidate>
+            {% csrf_token %}
+            <div class="form-body">
+                {{ form.as_p }}
+            </div>
+            <div class="form-note">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                The cashier identity is taken from your session and cannot be altered from this form.
+            </div>
+            <div class="form-footer">
+                <button type="submit" class="btn btn-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    Process Payment
+                </button>
+                <a class="btn btn-secondary" href="{% url 'auth_app:profile' %}">Cancel</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

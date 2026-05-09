@@ -93,7 +93,11 @@ class PharmacySecurityTest(TestCase):
 			reverse('pharmacy_app:validate_prescription', kwargs={'prescription_id': prescription.id}),
 		)
 
-		self.assertEqual(response.status_code, 403)
+		# @pharmacist_required me-redirect user yang sudah login tapi
+		# bukan apoteker ke home (bukan 403). Kegagalan role tetap
+		# di-log ke AuditLog untuk audit trail.
+		self.assertEqual(response.status_code, 302)
+		self.assertEqual(response.url, reverse('core_app:home'))
 
 	def test_dispense_requires_validated_status(self):
 		prescription = Prescription.objects.create(encounter=self.encounter)

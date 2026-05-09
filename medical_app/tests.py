@@ -95,7 +95,10 @@ class MedicalSecurityTests(TestCase):
             reverse("medical_app:medical_record_detail", args=[record.id])
         )
 
-        self.assertEqual(response.status_code, 403)
+        # @staff_role_required("DOCTOR") sekarang me-redirect user yang
+        # sudah login (tapi role salah) ke home dengan flash error.
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("core_app:home"))
 
     def test_doctor_can_create_medical_record_for_own_encounter(self):
         self.client.login(username="doctor1", password="StrongPassword123!")

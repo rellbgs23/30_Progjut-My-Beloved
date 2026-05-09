@@ -1,0 +1,27 @@
+{# Render minimal tanpa template inheritance karena saat 500 terjadi,
+   context processors bisa gagal dan membuat nested render failure. #}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Error — MediCore</title>
+    <link rel="stylesheet" href="{% static 'css/medicore.css' %}">
+</head>
+<body>
+    <main class="page-wrapper narrow" role="main">
+        <div class="error-page">
+            <div class="error-code" aria-hidden="true">500</div>
+            <h1 class="error-title">Server Error</h1>
+            <p class="error-message">
+                Something went wrong on our end. The issue has been logged and our
+                team will investigate. Please try again in a few minutes.
+            </p>
+            <div class="error-actions">
+                <a class="btn btn-primary" href="/">Back to Home</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

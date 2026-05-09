@@ -1,29 +1,36 @@
-"""
-URL configuration for progjut_hospital_system project.
+"""Root URL configuration.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+- `/`              -> core_app.home (role-aware router)
+- `/admin/`        -> Django admin
+- `/auth/`         -> login, logout, profile, denied
+- `/patient/`      -> portal pasien
+- `/medical/`      -> portal dokter & registration
+- `/pharmacy/`     -> portal apoteker
+- `/billing/`      -> portal kasir
+
+Error handlers:
+- 404 / 403 / 500  -> template bermerek MediCore (lihat templates/errors/)
 """
+
 from django.contrib import admin
-from django.urls import path, include
-from core_app.views import home_view
+from django.urls import include, path
+
+from core_app import views as core_views
 
 urlpatterns = [
-    path('', home_view, name='landing_page'),
+    path("", core_views.home, name="root"),
     path("admin/", admin.site.urls),
     path("auth/", include("auth_app.urls")),
     path("patient/", include("core_app.urls")),
     path("medical/", include("medical_app.urls")),
     path("pharmacy/", include("pharmacy_app.urls")),
-    path('billing/', include('billing_app.urls')),
+    path("billing/", include("billing_app.urls")),
 ]
+
+
+# Django memanggil handler ini saat DEBUG=False. Di DEBUG=True Django
+# menampilkan halaman teknis sendiri, jadi handler di-register hanya
+# untuk efek produksi.
+handler404 = "core_app.views.page_not_found"
+handler403 = "core_app.views.permission_denied"
+handler500 = "core_app.views.server_error"

@@ -1,139 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Validate Prescription</title>
-  <style>
-    :root {
-      --bg: #f4f8f9;
-      --surface: #ffffff;
-      --line: #d6e3e8;
-      --text: #112a33;
-      --text-muted: #4c6670;
-      --warning: #b45309;
-      --warning-strong: #92400e;
-      --neutral: #52636d;
-      --neutral-strong: #3d4b53;
-      --shadow: 0 18px 36px rgba(17, 42, 51, 0.12);
-    }
+{% extends "base.html" %}
 
-    * {
-      box-sizing: border-box;
-    }
+{% block title %}Validate Prescription — MediCore{% endblock %}
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 1rem;
-      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 10% -10%, #fde68a 0%, rgba(253, 230, 138, 0) 38%),
-        radial-gradient(circle at 95% -10%, #bae6fd 0%, rgba(186, 230, 253, 0) 34%),
-        var(--bg);
-    }
+{% block breadcrumb %}
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <span>Pharmacy</span>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <a href="{% url 'pharmacy_app:prescription_list' %}">Prescription Queue</a>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>Validate</span>
+    </nav>
+{% endblock %}
 
-    .card {
-      width: min(560px, 100%);
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      box-shadow: var(--shadow);
-      background: var(--surface);
-      padding: 1.3rem;
-    }
+{% block wrapper_class %}narrow{% endblock %}
 
-    h1 {
-      margin: 0 0 0.45rem;
-      font-size: clamp(1.3rem, 2.4vw, 1.8rem);
-    }
+{% block content %}
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Validate Prescription</h1>
+            <p class="page-subtitle">Verify the digital signature before promoting this prescription</p>
+        </div>
+    </div>
 
-    .desc {
-      margin: 0;
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
+    <div class="card accent-amber">
+        <div class="card-label">
+            <div class="card-label-icon icon-amber" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <span class="card-label-text">Confirmation Required</span>
+        </div>
+        <div class="content-block text-small text-muted">
+            By proceeding, the system will recompute the HMAC-SHA256 signature from the current medication items
+            and compare it against the signature captured when the doctor signed the prescription. Any tampering
+            will fail validation.
+        </div>
 
-    .meta {
-      margin-top: 1rem;
-      background: #fffdf8;
-      border: 1px solid #fde68a;
-      border-radius: 14px;
-      padding: 0.9rem;
-      display: grid;
-      gap: 0.45rem;
-    }
+        <div class="data-row">
+            <span class="data-row-label">Prescription ID</span>
+            <span class="data-row-value" style="font-family:monospace; font-size:0.8rem;">{{ prescription.id }}</span>
+        </div>
+        <div class="data-row">
+            <span class="data-row-label">Current Status</span>
+            <span class="data-row-value">
+                <span class="badge badge-indigo"><span class="badge-dot"></span>{{ prescription.get_status_display }}</span>
+            </span>
+        </div>
+        <div class="data-row">
+            <span class="data-row-label">Items</span>
+            <span class="data-row-value">{{ prescription.items.count }}</span>
+        </div>
 
-    .meta p {
-      margin: 0;
-      word-break: break-word;
-      font-size: 0.94rem;
-    }
-
-    .actions {
-      margin-top: 1rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem;
-    }
-
-    .btn {
-      appearance: none;
-      border: none;
-      border-radius: 10px;
-      padding: 0.65rem 1.1rem;
-      font-weight: 700;
-      cursor: pointer;
-      text-decoration: none;
-      text-align: center;
-      color: #fff;
-      transition: background 160ms ease;
-    }
-
-    .btn-warning {
-      background: var(--warning);
-    }
-
-    .btn-warning:hover,
-    .btn-warning:focus-visible {
-      background: var(--warning-strong);
-    }
-
-    .btn-neutral {
-      background: var(--neutral);
-    }
-
-    .btn-neutral:hover,
-    .btn-neutral:focus-visible {
-      background: var(--neutral-strong);
-    }
-
-    @media (max-width: 520px) {
-      .btn {
-        width: 100%;
-      }
-    }
-  </style>
-</head>
-<body>
-  <main class="card" aria-labelledby="validate-title">
-    <h1 id="validate-title">Validate Prescription</h1>
-    <p class="desc">Confirm integrity verification before changing prescription status.</p>
-
-    <section class="meta" aria-label="Prescription summary">
-      <p><strong>Prescription:</strong> {{ prescription.id }}</p>
-      <p><strong>Status:</strong> {{ prescription.status }}</p>
-    </section>
-
-    <form method="post" aria-label="Validate prescription form">
-      {% csrf_token %}
-      <div class="actions">
-        <button class="btn btn-warning" type="submit">Validate</button>
-        <a class="btn btn-neutral" href="{% url 'pharmacy_app:prescription_detail' prescription.id %}">Cancel</a>
-      </div>
-    </form>
-  </main>
-</body>
-</html>
+        <div class="card-footer">
+            <form method="post" style="display:inline-flex; gap:12px;">
+                {% csrf_token %}
+                <button class="btn btn-amber" type="submit">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    Verify &amp; Validate
+                </button>
+                <a class="btn btn-secondary" href="{% url 'pharmacy_app:prescription_detail' prescription.id %}">Cancel</a>
+            </form>
+        </div>
+    </div>
+{% endblock %}

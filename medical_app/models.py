@@ -22,6 +22,9 @@ class Patient(models.Model):
     address = models.CharField(max_length=255, blank=True)
     phoneNumber = models.CharField(max_length=30, blank=True)
 
+    class Meta:
+        ordering = ["name"]
+
     @classmethod
     def generate_mrn(cls):
         while True:
@@ -46,6 +49,7 @@ class Appointment(models.Model):
         Staff,
         on_delete=models.RESTRICT,
         related_name="doctor_appointments",
+        limit_choices_to={"role": "DOCTOR"},
     )
     scheduledAt = models.DateTimeField()
     reason = models.CharField(max_length=255)
@@ -54,6 +58,9 @@ class Appointment(models.Model):
         choices=STATUS_CHOICES,
         default="SCHEDULED",
     )
+
+    class Meta:
+        ordering = ["-scheduledAt"]
 
     def clean(self):
         if self.doctor.role != "DOCTOR":
@@ -66,9 +73,16 @@ class Appointment(models.Model):
 class Encounter(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
-    staff = models.ForeignKey(Staff, on_delete=models.RESTRICT)
+    staff = models.ForeignKey(
+        Staff,
+        on_delete=models.RESTRICT,
+        limit_choices_to={"role": "DOCTOR"},
+    )
     dateTime = models.DateTimeField(auto_now_add=True)
     complaint = models.TextField()
+
+    class Meta:
+        ordering = ["-dateTime"]
 
     def clean(self):
         if self.staff.role != "DOCTOR":

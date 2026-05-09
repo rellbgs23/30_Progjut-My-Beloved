@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}My Encounters — MediCore{% endblock %}
+
+{% block breadcrumb %}
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'medical_app:doctor_dashboard' %}">Dashboard</a>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>My Encounters</span>
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">My Encounters</h1>
+            <p class="page-subtitle">Clinical encounters you have conducted.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <ul class="mc-list">
+            {% for encounter in encounters %}
+                <li class="mc-list-item">
+                    <div>
+                        <div class="primary">{{ encounter.dateTime|date:"l, d M Y H:i" }}</div>
+                        <div class="secondary">
+                            {{ encounter.patient.name }} &middot;
+                            MRN {{ encounter.patient.mrn }} &middot;
+                            {{ encounter.complaint|truncatewords:10 }}
+                        </div>
+                    </div>
+                    <a class="btn btn-secondary btn-sm" href="{% url 'medical_app:doctor_encounter_detail' encounter.id %}">Open</a>
+                </li>
+            {% empty %}
+                <li class="mc-list-empty">No encounters yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

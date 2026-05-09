@@ -113,7 +113,11 @@ class PatientPortalTests(TestCase):
 
 		response = self.client.get(reverse("core_app:patient_dashboard"))
 
-		self.assertEqual(response.status_code, 403)
+		# Staff tanpa profil pasien dialihkan ke home router (yang lalu
+		# me-redirect ke dashboard role mereka). TIDAK boleh render
+		# halaman pasien.
+		self.assertEqual(response.status_code, 302)
+		self.assertEqual(response.url, reverse("core_app:home"))
 
 	def test_patient_can_request_appointment(self):
 		self.client.login(username="patient1", password="StrongPassword123!")

@@ -1,41 +1,46 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Medical History</title>
-    <style>
-        body{font-family:Inter, system-ui, -apple-system, Roboto, Arial;margin:0;background:#f6f9fb;color:#071124}
-        .wrap{max-width:980px;margin:26px auto;padding:18px}
-        .card{background:#fff;padding:18px;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.06)}
-        h1{margin:0 0 12px}
-        .enc-list{display:flex;flex-direction:column;gap:10px;padding:0;list-style:none}
-        .enc{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:10px;border:1px solid #eef3f4}
-        .meta{color:#6b7280}
-        .link{color:#0f766e;text-decoration:none;font-weight:600}
-        @media(max-width:640px){.enc{flex-direction:column;align-items:flex-start;gap:8px}}
-    </style>
-</head>
-<body>
-    <div class="wrap">
-        <h1>Medical History</h1>
-        <div class="card">
-            <ul class="enc-list">
-                {% for encounter in encounters %}
-                    <li class="enc">
-                        <div>
-                            <div><strong>{{ encounter.dateTime }}</strong></div>
-                            <div class="meta">Dr. {{ encounter.staff.name }} — {{ encounter.complaint }}</div>
-                        </div>
-                        <div><a class="link" href="{% url 'core_app:patient_encounter_detail' encounter.id %}">Detail</a></div>
-                    </li>
-                {% empty %}
-                    <li class="enc"><div class="meta">No encounter history.</div></li>
-                {% endfor %}
-            </ul>
-        </div>
+{% extends "base.html" %}
 
-        <p style="margin-top:12px"><a href="{% url 'core_app:patient_dashboard' %}">Back to dashboard</a></p>
+{% block title %}Medical History — MediCore{% endblock %}
+
+{% block breadcrumb %}
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'core_app:patient_dashboard' %}">Dashboard</a>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>Medical History</span>
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Medical History</h1>
+            <p class="page-subtitle">Consultation records, diagnoses, and prescriptions</p>
+        </div>
     </div>
-</body>
-</html>
+
+    <div class="card">
+        <ul class="mc-list">
+            {% for encounter in encounters %}
+                <li class="mc-list-item">
+                    <div>
+                        <div class="primary">{{ encounter.dateTime|date:"l, d M Y H:i" }}</div>
+                        <div class="secondary">
+                            Dr. {{ encounter.staff.name }}
+                            &middot;
+                            {{ encounter.complaint|truncatewords:10 }}
+                        </div>
+                    </div>
+                    <a class="btn btn-secondary btn-sm" href="{% url 'core_app:patient_encounter_detail' encounter.id %}">Details</a>
+                </li>
+            {% empty %}
+                <li class="mc-list-empty">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                    <div>No encounter history yet</div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}
