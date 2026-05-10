@@ -11,6 +11,7 @@ from auth_app.models import UserAccount, Staff
 from django.utils import timezone
 from medical_app.models import Patient, Appointment, Encounter, MedicalRecordEntry
 from pharmacy_app.models import Medicine, Prescription, PrescriptionItem
+from pharmacy_app.utils import sign_prescription
 from billing_app.models import Invoice, Payment
 
 
@@ -130,6 +131,7 @@ def run_seeder():
             quantity=5,
             instruction="Take twice a day"
         )
+        sign_prescription(rx)
 
         inv = Invoice.objects.create(
             encounter=enc,
