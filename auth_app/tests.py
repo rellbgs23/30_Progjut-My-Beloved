@@ -39,8 +39,8 @@ class AuthSecurityTests(TestCase):
         self.assertRedirects(response, reverse("landing_page"))
         self.assertContains(response, "MFA belum aktif")
 
-    def test_account_locked_after_five_failed_attempts(self):
-        for _ in range(5):
+    def test_account_locked_after_six_failed_attempts(self):
+        for _ in range(6):
             self.client.post(reverse("auth_app:login"), {
                 "username": "doctor1",
                 "password": "WrongPassword!",
@@ -48,7 +48,7 @@ class AuthSecurityTests(TestCase):
 
         self.user.refresh_from_db()
 
-        self.assertEqual(self.user.failedLoginAttempts, 5)
+        self.assertEqual(self.user.failedLoginAttempts, 1)
         self.assertIsNotNone(self.user.lockedUntil)
         self.assertGreater(self.user.lockedUntil, timezone.now())
 
@@ -74,7 +74,7 @@ class AuthSecurityTests(TestCase):
 
         self.assertRedirects(response, reverse("landing_page"))
         self.assertContains(response, "Username atau password salah")
-        self.assertContains(response, "Sisa percobaan sebelum akun terkunci: 4")
+        self.assertContains(response, "Sisa percobaan sebelum akun terkunci: 5")
 
     def test_authenticated_user_cannot_open_login_page(self):
         self.client.force_login(self.user)

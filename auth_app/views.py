@@ -64,6 +64,7 @@ def login_view(request):
                 user_obj.failedLoginAttempts += 1
 
                 if user_obj.failedLoginAttempts >= MAX_FAILED_LOGIN_ATTEMPTS:
+                    user_obj.failedLoginAttempts = 1
                     user_obj.lock_account(minutes=LOCKOUT_MINUTES)
                     return _login_failure(request, _lockout_message(user_obj))
                 else:
