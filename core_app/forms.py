@@ -81,6 +81,33 @@ class SelfRegistrationForm(forms.Form):
         return user, patient
 
 
+class PatientProfileEditForm(forms.ModelForm):
+    class Meta:
+        model = Patient
+        fields = ["name", "dateOfBirth", "address", "phoneNumber"]
+        widgets = {
+            "dateOfBirth": forms.DateInput(attrs={"type": "date"}),
+        }
+
+    def clean_name(self):
+        value = self.cleaned_data["name"].strip()
+        if not PROFILE_NAME_REGEX.fullmatch(value):
+            raise ValidationError("Nama hanya boleh berisi huruf, angka, spasi, dan tanda baca dasar.")
+        return value
+
+    def clean_address(self):
+        value = self.cleaned_data["address"].strip()
+        if not PROFILE_ADDRESS_REGEX.fullmatch(value):
+            raise ValidationError("Alamat mengandung karakter yang tidak diizinkan.")
+        return value
+
+    def clean_phoneNumber(self):
+        value = self.cleaned_data["phoneNumber"].strip()
+        if not PROFILE_PHONE_REGEX.fullmatch(value):
+            raise ValidationError("No. telepon hanya boleh berisi angka dan simbol +()- spasi.")
+        return value
+
+
 class PatientAppointmentRequestForm(forms.ModelForm):
     doctor = forms.ModelChoiceField(
         queryset=Staff.objects.none(),

@@ -7,6 +7,7 @@ app_name = "core_app"
 urlpatterns = [
     path("register/", views.self_register, name="patient_register"),
     path("dashboard/", views.patient_dashboard, name="patient_dashboard"),
+    path("edit/<uuid:patient_id>/", views.edit_patient_profile, name="patient_edit"),
     path("appointments/new/", views.request_appointment, name="patient_request_appointment"),
     path("appointments/", views.patient_appointments, name="patient_appointments"),
     path("encounters/", views.patient_encounter_list, name="patient_encounters"),

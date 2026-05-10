@@ -100,7 +100,9 @@ def profile_view(request):
     if not request.user.is_authenticated:
         return redirect("auth_app:login")
 
-    return render(request, "auth_app/profile.html")
+    return render(request, "auth_app/profile.html", {
+			"user": request.user
+		},)
 
 
 def access_denied_view(request):

@@ -8,7 +8,7 @@ from billing_app.models import Invoice
 from medical_app.models import Appointment, Encounter, MedicalRecordEntry, Patient
 from pharmacy_app.models import Prescription
 
-from .forms import PatientAppointmentRequestForm, SelfRegistrationForm
+from .forms import PatientAppointmentRequestForm, PatientProfileEditForm, SelfRegistrationForm
 
 
 MAX_ENCOUNTER_SEARCH_LENGTH = 64
@@ -92,6 +92,35 @@ def patient_dashboard(request):
 			"appointment_count": appointment_count,
 			"encounter_count": encounter_count,
 			"unpaid_invoice_count": unpaid_invoice_count,
+		},
+	)
+
+
+@login_required
+def edit_patient_profile(request, patient_id):
+	patient, error_response = _get_patient_or_forbidden(request)
+	if error_response:
+		return error_response
+
+	if patient.id != patient_id:
+		messages.error(request, "Access denied for this patient profile.")
+		return redirect("core_app:patient_dashboard")
+
+	if request.method == "POST":
+		form = PatientProfileEditForm(request.POST, instance=patient)
+		if form.is_valid():
+			form.save()
+			messages.success(request, "Profil pasien berhasil diperbarui.")
+			return redirect("core_app:patient_dashboard")
+	else:
+		form = PatientProfileEditForm(instance=patient)
+
+	return render(
+		request,
+		"core_app/patient_edit.html",
+		{
+			"form": form,
+			"patient": patient,
 		},
 	)
 

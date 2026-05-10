@@ -1,5 +1,5 @@
 from cryptography.fernet import Fernet
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -137,6 +137,86 @@ class PatientPortalTests(TestCase):
 
 		self.assertEqual(response.status_code, 302)
 		self.assertTrue(Appointment.objects.filter(patient=self.patient, status="PENDING").exists())
+
+	def test_patient_can_edit_own_profile(self):
+		self.client.login(username="patient1", password="StrongPassword123!")
+
+		response = self.client.post(
+			reverse("core_app:patient_edit", args=[self.patient.id]),
+			{
+				"name": "Patient One Updated",
+				"dateOfBirth": "1999-01-01",
+				"address": "Jl. Aman #12",
+				"phoneNumber": "+62 812-3456-7890",
+			},
+		)
+
+		self.assertRedirects(response, reverse("core_app:patient_dashboard"))
+		self.patient.refresh_from_db()
+		self.assertEqual(self.patient.name, "Patient One Updated")
+		self.assertEqual(self.patient.address, "Jl. Aman #12")
+		self.assertEqual(self.patient.phoneNumber, "+62 812-3456-7890")
+
+	def test_patient_cannot_edit_other_patient_profile(self):
+		self.client.login(username="patient1", password="StrongPassword123!")
+
+		response = self.client.post(
+			reverse("core_app:patient_edit", args=[self.other_patient.id]),
+			{
+				"name": "Changed Other Patient",
+				"dateOfBirth": "1998-01-01",
+				"address": "Jl. Tidak Boleh 1",
+				"phoneNumber": "08123456780",
+			},
+		)
+
+		self.assertRedirects(response, reverse("core_app:patient_dashboard"))
+		self.other_patient.refresh_from_db()
+		self.assertEqual(self.other_patient.name, "Patient Two")
+
+	def test_patient_profile_edit_rejects_injection_payloads(self):
+		self.client.login(username="patient1", password="StrongPassword123!")
+
+		response = self.client.post(
+			reverse("core_app:patient_edit", args=[self.patient.id]),
+			{
+				"name": "12345' OR '1'='1",
+				"dateOfBirth": "1999-01-01",
+				"address": "Jl. Aman 1; rm -rf /",
+				"phoneNumber": "08123456789 && whoami",
+			},
+		)
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Nama hanya boleh")
+		self.assertContains(response, "Alamat mengandung karakter")
+		self.assertContains(response, "No. telepon hanya boleh")
+		self.patient.refresh_from_db()
+		self.assertEqual(self.patient.name, "Patient One")
+
+	def test_patient_profile_edit_requires_csrf_token(self):
+		csrf_client = Client(enforce_csrf_checks=True)
+		csrf_client.login(username="patient1", password="StrongPassword123!")
+
+		response = csrf_client.post(
+			reverse("core_app:patient_edit", args=[self.patient.id]),
+			{
+				"name": "Patient One Updated",
+				"dateOfBirth": "1999-01-01",
+				"address": "Jl. Aman #12",
+				"phoneNumber": "08123456789",
+			},
+		)
+
+		self.assertEqual(response.status_code, 403)
+
+	def test_auth_profile_shows_patient_edit_profile_link(self):
+		self.client.login(username="patient1", password="StrongPassword123!")
+
+		response = self.client.get(reverse("auth_app:profile"))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, reverse("core_app:patient_edit", args=[self.patient.id]))
 
 	def test_patient_login_redirects_to_patient_dashboard(self):
 		response = self.client.post(reverse("auth_app:login"), {

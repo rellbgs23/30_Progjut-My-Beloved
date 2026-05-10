@@ -52,6 +52,9 @@
                 <dd class="data-value">{{ patient.address|default:"-" }}</dd>
             </div>
         </dl>
+        <div class="action-row">
+            <a class="btn btn-primary" href="{% url 'core_app:patient_edit' patient.id %}">Edit Profile</a>
+        </div>
     </aside>
 </div>
 {% endblock %}

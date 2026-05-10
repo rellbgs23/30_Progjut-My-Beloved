@@ -41,7 +41,12 @@
         {% if request.user.is_patient %}
             <p><span class="badge">Patient</span></p>
             <p class="muted">External patient portal account.</p>
-            <a class="btn btn-primary" href="{% url 'core_app:patient_dashboard' %}">Open Dashboard</a>
+            <div class="action-row">
+                <a class="btn btn-primary" href="{% url 'core_app:patient_dashboard' %}">Open Dashboard</a>
+                {% if request.user.patient %}
+                    <a class="btn btn-ghost" href="{% url 'core_app:patient_edit' request.user.patient.id %}">Edit Profile</a>
+                {% endif %}
+            </div>
         {% elif request.user.staff %}
             <p><span class="badge">{{ request.user.staff.role }}</span></p>
             <dl class="data-list">
@@ -64,4 +69,5 @@
         <button type="submit" class="btn btn-danger">Sign Out</button>
     </form>
 </section>
+
 {% endblock %}
