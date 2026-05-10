@@ -621,4 +621,4 @@ Beberapa test yang mendukung rubrik:
 
 ## F. Link Video Demo
 
-**Link Video:** TODO
+**Link Video:** [Presentasi Tugas 3 PKPL - Secure Coding Practice by Progjut My Beloved](https://youtu.be/RB0R39x9NE8)
