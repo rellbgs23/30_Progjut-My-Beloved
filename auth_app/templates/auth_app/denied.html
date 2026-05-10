@@ -1,28 +1,27 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Access Denied</title>
-  <style>
-    body{font-family:Inter, system-ui, -apple-system, Roboto, Arial;margin:0;background:#f3f6f8;color:#071124}
-    .wrap{max-width:760px;margin:60px auto;padding:18px}
-    .card{background:#fff;padding:24px;border-radius:12px;box-shadow:0 12px 40px rgba(2,6,23,0.06);text-align:center}
-    h1{margin:0 0 8px}
-    p{color:#6b7280}
-    a.btn{display:inline-block;margin-top:12px;padding:10px 14px;background:#0f766e;color:#fff;border-radius:10px;text-decoration:none}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="card" role="alert" aria-live="assertive">
-      <h1>Access Denied</h1>
-      <p>You do not have permission to access this page.</p>
-      {% if user.is_authenticated %}
-        <p>Signed in as <strong>{{ user.get_username }}</strong></p>
-      {% endif %}
-      <a class="btn" href="{% url 'auth_app:login' %}">Return to login</a>
+{% extends "base.html" %}
+
+{% block title %}Access Denied - MediCore HIS{% endblock %}
+
+{% block page_header %}
+<section class="page-header centered">
+    <p class="eyebrow">Security</p>
+    <h1 class="page-title">Access Denied</h1>
+    <p class="page-subtitle">Your account does not have permission to open this page.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="content-card centered">
+    {% if user.is_authenticated %}
+        <p class="muted">Signed in as <strong>{{ user.get_username }}</strong>.</p>
+    {% endif %}
+    <div class="action-row center-actions">
+        <a class="btn btn-primary" href="{% url 'landing_page' %}">Back to Home</a>
+        {% if user.is_authenticated %}
+            <a class="btn btn-ghost" href="{% url 'auth_app:profile' %}">Open Profile</a>
+        {% else %}
+            <a class="btn btn-ghost" href="{% url 'auth_app:login' %}">Sign In</a>
+        {% endif %}
     </div>
-  </div>
-</body>
-</html>
+</section>
+{% endblock %}

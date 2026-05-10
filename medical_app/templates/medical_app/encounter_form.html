@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Create Encounter - MediCore HIS{% endblock %}
+
+{% block page_header %}
+<section class="page-header">
+    <p class="eyebrow">Encounter</p>
+    <h1 class="page-title">Create Encounter</h1>
+    <p class="page-subtitle">Start an encounter from this scheduled appointment.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="content-card">
+    <dl class="data-list">
+        <div class="data-row">
+            <dt class="data-label">Patient</dt>
+            <dd class="data-value">{{ appointment.patient.name }}</dd>
+        </div>
+        <div class="data-row">
+            <dt class="data-label">Scheduled At</dt>
+            <dd class="data-value">{{ appointment.scheduledAt }}</dd>
+        </div>
+    </dl>
+
+    <form method="post" class="form-panel" novalidate>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="action-row">
+            <button type="submit" class="btn btn-primary">Create Encounter</button>
+            <a class="btn btn-ghost" href="{% url 'medical_app:appointment_detail' appointment.id %}">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

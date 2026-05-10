@@ -1,41 +1,47 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Medical History</title>
-    <style>
-        body{font-family:Inter, system-ui, -apple-system, Roboto, Arial;margin:0;background:#f6f9fb;color:#071124}
-        .wrap{max-width:980px;margin:26px auto;padding:18px}
-        .card{background:#fff;padding:18px;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.06)}
-        h1{margin:0 0 12px}
-        .enc-list{display:flex;flex-direction:column;gap:10px;padding:0;list-style:none}
-        .enc{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:10px;border:1px solid #eef3f4}
-        .meta{color:#6b7280}
-        .link{color:#0f766e;text-decoration:none;font-weight:600}
-        @media(max-width:640px){.enc{flex-direction:column;align-items:flex-start;gap:8px}}
-    </style>
-</head>
-<body>
-    <div class="wrap">
-        <h1>Medical History</h1>
-        <div class="card">
-            <ul class="enc-list">
-                {% for encounter in encounters %}
-                    <li class="enc">
-                        <div>
-                            <div><strong>{{ encounter.dateTime }}</strong></div>
-                            <div class="meta">Dr. {{ encounter.staff.name }} — {{ encounter.complaint }}</div>
-                        </div>
-                        <div><a class="link" href="{% url 'core_app:patient_encounter_detail' encounter.id %}">Detail</a></div>
-                    </li>
-                {% empty %}
-                    <li class="enc"><div class="meta">No encounter history.</div></li>
-                {% endfor %}
-            </ul>
-        </div>
+{% extends "base.html" %}
 
-        <p style="margin-top:12px"><a href="{% url 'core_app:patient_dashboard' %}">Back to dashboard</a></p>
+{% block title %}Medical History - MediCore HIS{% endblock %}
+
+{% block page_header %}
+<section class="page-header">
+    <p class="eyebrow">Patient Portal</p>
+    <h1 class="page-title">Medical History</h1>
+    <p class="page-subtitle">Encounters and clinical visits visible to your patient account.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="content-card">
+    <form method="get" class="form-panel">
+        <p>
+            <label for="encounter-search">Search Encounter Number</label>
+            <input id="encounter-search" type="text" name="q" value="{{ search_query }}" placeholder="Example: 1" maxlength="64" inputmode="search">
+        </p>
+        <div class="action-row">
+            <button type="submit" class="btn btn-primary">Search</button>
+            {% if search_query %}
+                <a class="btn btn-ghost" href="{% url 'core_app:patient_encounters' %}">Clear</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <ul class="list-stack">
+        {% for encounter in encounters %}
+            <li class="list-item">
+                <div>
+                    <strong>Encounter #{{ encounter.encounterNumber }}</strong>
+                    <div class="muted">{{ encounter.dateTime }}</div>
+                    <div class="muted">Dr. {{ encounter.staff.name }} | {{ encounter.complaint }}</div>
+                </div>
+                <a class="btn btn-ghost" href="{% url 'core_app:patient_encounter_detail_by_number' encounter.encounterNumber %}">Detail</a>
+            </li>
+        {% empty %}
+            <li class="empty-state">No encounter history found.</li>
+        {% endfor %}
+    </ul>
+
+    <div class="action-row">
+        <a class="btn btn-ghost" href="{% url 'core_app:patient_dashboard' %}">Back to Dashboard</a>
     </div>
-</body>
-</html>
+</section>
+{% endblock %}

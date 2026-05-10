@@ -15,7 +15,7 @@ class Invoice(models.Model):
         VOID = 'VOID', 'Void'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    encounter = models.OneToOneField(Encounter, on_delete=models.CASCADE)
+    encounter = models.OneToOneField(Encounter, on_delete=models.CASCADE, db_constraint=False)
 
     # CWE-20: mencegah tagihan bernilai negatif, tapi tetap membolehkan 0 (untuk dokumentasi [ex: subsidi])
     totalAmount = models.DecimalField(

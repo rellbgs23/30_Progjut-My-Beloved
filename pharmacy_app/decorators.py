@@ -1,5 +1,8 @@
 from functools import wraps
-from django.http import HttpResponseForbidden
+from django.contrib import messages
+from django.shortcuts import redirect
+
+from auth_app.decorators import deny_to_home
 from auth_app.models import Staff
 
 
@@ -7,7 +10,8 @@ def pharmacist_required(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return HttpResponseForbidden('Authentication required.')
+            messages.error(request, 'Please sign in before accessing pharmacy features.')
+            return redirect('auth_app:login')
 
         from billing_app.models import AuditLog
 
@@ -18,7 +22,7 @@ def pharmacist_required(view_func):
                 action=AuditLog.Action.ROLE_FAIL,
                 detail={'reason': 'Missing staff profile'},
             )
-            return HttpResponseForbidden('Staff account required.')
+            return deny_to_home(request, 'Staff account required.')
 
         if staff.role != 'PHARMACIST':
             AuditLog.record_action(
@@ -26,7 +30,7 @@ def pharmacist_required(view_func):
                 actor=staff,
                 detail={'requiredRole': 'PHARMACIST', 'actualRole': staff.role},
             )
-            return HttpResponseForbidden('Only pharmacist can access this feature.')
+            return deny_to_home(request, 'Only pharmacist can access this feature.')
 
         return view_func(request, *args, **kwargs)
 
@@ -37,7 +41,8 @@ def mfa_required(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return HttpResponseForbidden('Authentication required.')
+            messages.error(request, 'Please sign in before accessing pharmacy features.')
+            return redirect('auth_app:login')
 
         from billing_app.models import AuditLog
 
@@ -53,7 +58,7 @@ def mfa_required(view_func):
                 actor=actor,
                 detail={'reason': 'MFA is not enabled'},
             )
-            return HttpResponseForbidden('MFA must be enabled for this feature.')
+            return deny_to_home(request, 'MFA must be enabled for this feature.')
 
         return view_func(request, *args, **kwargs)
 

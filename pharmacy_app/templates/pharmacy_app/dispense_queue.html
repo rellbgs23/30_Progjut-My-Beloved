@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Dispense Queue - MediCore HIS{% endblock %}
+
+{% block page_header %}
+<section class="page-header">
+    <p class="eyebrow">Pharmacy</p>
+    <h1 class="page-title">Dispense Queue</h1>
+    <p class="page-subtitle">Validated prescriptions awaiting medicine handover.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="content-card">
+
+    {% if prescriptions %}
+        <ul class="list-stack">
+            {% for prescription in prescriptions %}
+                <li class="list-item">
+                    <div>
+                        <strong>{{ prescription.encounter.patient.name }}</strong>
+                        <div class="muted">Prescription ID: {{ prescription.id }}</div>
+                        <div class="muted">Validated At: {{ prescription.validatedAt|default:"-" }}</div>
+                    </div>
+                    <a class="btn btn-primary" href="{% url 'pharmacy_app:prescription_detail' prescription.id %}">Detail</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty-state">No VALIDATED prescriptions waiting for dispense.</p>
+    {% endif %}
+</section>
+{% endblock %}

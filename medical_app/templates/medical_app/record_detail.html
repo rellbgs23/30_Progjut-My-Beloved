@@ -1,278 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medical Record Detail — MediCore</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+{% extends "base.html" %}
 
-        :root {
-            --navy:        #0b1f3a;
-            --teal:        #0d7377;
-            --teal-light:  #14a085;
-            --teal-pale:   #e8f5f5;
-            --indigo-pale: #edf0fb;
-            --indigo:      #3b4fa8;
-            --amber-pale:  #fff8e6;
-            --amber:       #8a6010;
-            --warm-white:  #fdfcfa;
-            --surface:     #f8fafb;
-            --muted:       #7a8a9a;
-            --border:      #d6dde6;
-            --border-soft: #edf1f5;
-            --text:        #1a2a3a;
-            --shadow-md:   0 8px 32px rgba(11,31,58,0.11);
-        }
+{% block title %}Medical Record Detail - MediCore HIS{% endblock %}
 
-        html, body { min-height: 100%; }
+{% block page_header %}
+<section class="page-header">
+    <p class="eyebrow">Medical Records</p>
+    <h1 class="page-title">Medical Record</h1>
+    <p class="page-subtitle">Clinical documentation for this patient visit.</p>
+</section>
+{% endblock %}
 
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background-color: var(--surface);
-            color: var(--text);
-            line-height: 1.6;
-        }
+{% block content %}
+<div class="grid">
+    <section class="content-card">
+        <h2 class="section-title">Diagnosis</h2>
+        <p>{{ diagnosis }}</p>
+    </section>
 
-        /* ── Topbar ─────────────────────────── */
-        .topbar {
-            background: var(--navy);
-            padding: 0 32px; height: 60px;
-            display: flex; align-items: center; gap: 16px;
-            box-shadow: 0 2px 12px rgba(11,31,58,0.25);
-            position: sticky; top: 0; z-index: 100;
-        }
+    <section class="content-card">
+        <h2 class="section-title">Treatment Plan</h2>
+        <p>{{ treatmentPlan }}</p>
+    </section>
 
-        .topbar-icon {
-            width: 34px; height: 34px;
-            background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
-            border-radius: 9px;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-            box-shadow: 0 2px 10px rgba(13,115,119,0.4);
-        }
-
-        .topbar-icon svg { width: 18px; height: 18px; fill: white; stroke: none; }
-
-        .topbar-name {
-            font-family: 'Crimson Pro', Georgia, serif;
-            font-size: 1.2rem; font-weight: 600;
-            color: #fff; letter-spacing: 0.01em;
-        }
-
-        .topbar-sep {
-            width: 1px; height: 20px;
-            background: rgba(255,255,255,0.15); margin: 0 4px;
-        }
-
-        .topbar-section {
-            font-size: 0.8rem; font-weight: 400;
-            color: rgba(255,255,255,0.5);
-            letter-spacing: 0.06em; text-transform: uppercase;
-        }
-
-        /* ── Page ───────────────────────────── */
-        .page-wrapper {
-            max-width: 700px; margin: 0 auto;
-            padding: 44px 24px 60px;
-            animation: fadeUp 0.55s cubic-bezier(0.22,1,0.36,1) both;
-        }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .breadcrumb {
-            display: flex; align-items: center; gap: 6px;
-            font-size: 0.78rem; color: var(--muted); margin-bottom: 20px;
-        }
-
-        .breadcrumb svg {
-            width: 12px; height: 12px;
-            fill: none; stroke: var(--muted);
-            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-        }
-
-        .page-header {
-            display: flex; align-items: flex-start;
-            justify-content: space-between; gap: 16px;
-            margin-bottom: 32px; flex-wrap: wrap;
-        }
-
-        .page-title {
-            font-family: 'Crimson Pro', Georgia, serif;
-            font-size: 2rem; font-weight: 600;
-            color: var(--navy); letter-spacing: -0.015em;
-            line-height: 1.1;
-        }
-
-        .page-subtitle {
-            font-size: 0.875rem; color: var(--muted);
-            font-weight: 300; margin-top: 4px;
-        }
-
-        .created-chip {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: #fff; border: 1px solid var(--border);
-            border-radius: 8px; padding: 6px 12px;
-            font-size: 0.78rem; color: var(--muted); white-space: nowrap;
-            flex-shrink: 0;
-            box-shadow: 0 1px 4px rgba(11,31,58,0.06);
-        }
-
-        .created-chip svg {
-            width: 13px; height: 13px;
-            fill: none; stroke: var(--muted);
-            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-        }
-
-        /* ── Cards ──────────────────────────── */
-        .card {
-            background: #fff;
-            border-radius: 18px; border: 1px solid var(--border-soft);
-            box-shadow: var(--shadow-md);
-            overflow: hidden; margin-bottom: 20px;
-        }
-
-        .card-label {
-            display: flex; align-items: center; gap: 10px;
-            padding: 18px 24px 14px;
-            border-bottom: 1px solid var(--border-soft);
-        }
-
-        .card-label-icon {
-            width: 32px; height: 32px; border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .card-label-icon svg {
-            width: 16px; height: 16px;
-            fill: none;
-            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-        }
-
-        .icon-teal   { background: var(--teal-pale); }
-        .icon-teal svg   { stroke: var(--teal); }
-        .icon-indigo { background: var(--indigo-pale); }
-        .icon-indigo svg { stroke: var(--indigo); }
-        .icon-amber  { background: var(--amber-pale); }
-        .icon-amber svg  { stroke: var(--amber); }
-
-        .card-label-text {
-            font-size: 0.78rem; font-weight: 500;
-            letter-spacing: 0.08em; text-transform: uppercase;
-            color: var(--muted);
-        }
-
-        /* Long text content blocks */
-        .content-block {
-            padding: 20px 24px;
-        }
-
-        .content-text {
-            font-size: 0.925rem; color: var(--text);
-            line-height: 1.7; font-weight: 400;
-        }
-
-        /* Accent left-rule for clinical fields */
-        .card.diagnosis .card-label { border-bottom-color: rgba(13,115,119,0.12); }
-        .card.diagnosis { border-top: 3px solid var(--teal); }
-        .card.treatment { border-top: 3px solid var(--indigo); }
-        .card.notes     { border-top: 3px solid var(--amber); }
-
-        @media (max-width: 600px) {
-            .topbar { padding: 0 18px; }
-            .page-wrapper { padding: 28px 16px 48px; }
-            .page-title { font-size: 1.65rem; }
-            .content-block { padding: 16px 20px; }
-            .card-label { padding-left: 20px; padding-right: 20px; }
-            .page-header { flex-direction: column; }
-        }
-    </style>
-</head>
-<body>
-
-    <header class="topbar" role="banner">
-        <a href="#" aria-label="MediCore Home" style="display:flex;align-items:center;gap:12px;text-decoration:none;">
-            <div class="topbar-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="9" y="2" width="6" height="20" rx="1.5"/>
-                    <rect x="2" y="9" width="20" height="6" rx="1.5"/>
-                </svg>
-            </div>
-            <span class="topbar-name">MediCore</span>
-        </a>
-        <div class="topbar-sep"></div>
-        <span class="topbar-section">Medical Records</span>
-    </header>
-
-    <main class="page-wrapper" role="main">
-
-        <nav class="breadcrumb" aria-label="Breadcrumb">
-            <span>Medical Records</span>
-            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-            <span>Detail</span>
-        </nav>
-
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">Medical Record</h1>
-                <p class="page-subtitle">Clinical documentation for this patient visit</p>
-            </div>
-            <div class="created-chip" aria-label="Record created at {{ record.createdAt }}">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                {{ record.createdAt }}
-            </div>
+    <section class="content-card">
+        <h2 class="section-title">Clinical Notes</h2>
+        <p>{{ notes|default:"-" }}</p>
+        <div class="divider"></div>
+        <p class="muted">Created at {{ record.createdAt }}</p>
+        <div class="action-row">
+            {% if prescription %}
+                <a class="btn btn-ghost" href="{% url 'pharmacy_app:prescription_detail' prescription.id %}">View Prescription</a>
+            {% else %}
+                <a class="btn btn-primary" href="{% url 'pharmacy_app:create_prescription' record.encounter.pk %}">Create Prescription</a>
+            {% endif %}
         </div>
-
-        <!-- Diagnosis -->
-        <div class="card diagnosis" role="region" aria-label="Diagnosis"
-             style="animation: fadeUp 0.55s 0.0s cubic-bezier(0.22,1,0.36,1) both;">
-            <div class="card-label">
-                <div class="card-label-icon icon-teal" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
-                </div>
-                <span class="card-label-text">Diagnosis</span>
-            </div>
-            <div class="content-block">
-                <p class="content-text">{{ diagnosis }}</p>
-            </div>
-        </div>
-
-        <!-- Treatment Plan -->
-        <div class="card treatment" role="region" aria-label="Treatment Plan"
-             style="animation: fadeUp 0.55s 0.07s cubic-bezier(0.22,1,0.36,1) both;">
-            <div class="card-label">
-                <div class="card-label-icon icon-indigo" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 8v4l3 3"/></svg>
-                </div>
-                <span class="card-label-text">Treatment Plan</span>
-            </div>
-            <div class="content-block">
-                <p class="content-text">{{ treatmentPlan }}</p>
-            </div>
-        </div>
-
-        <!-- Notes -->
-        <div class="card notes" role="region" aria-label="Clinical Notes"
-             style="animation: fadeUp 0.55s 0.14s cubic-bezier(0.22,1,0.36,1) both;">
-            <div class="card-label">
-                <div class="card-label-icon icon-amber" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                </div>
-                <span class="card-label-text">Clinical Notes</span>
-            </div>
-            <div class="content-block">
-                <p class="content-text">{{ notes }}</p>
-            </div>
-        </div>
-
-    </main>
-
-</body>
-</html>
+    </section>
+</div>
+{% endblock %}

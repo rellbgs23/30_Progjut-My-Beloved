@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor Appointments - MediCore HIS{% endblock %}
+
+{% block page_header %}
+<section class="page-header">
+    <p class="eyebrow">Doctor</p>
+    <h1 class="page-title">My Appointments</h1>
+    <p class="page-subtitle">Appointments assigned to Dr. {{ doctor.name }}.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="content-card">
+    <ul class="list-stack">
+        {% for appointment in appointments %}
+            <li class="list-item">
+                <div>
+                    <strong>{{ appointment.scheduledAt }}</strong>
+                    <div class="muted">{{ appointment.patient.name }} | {{ appointment.reason }}</div>
+                    <span class="badge badge-{{ appointment.status|lower }}">{{ appointment.status }}</span>
+                </div>
+                <div class="action-row">
+                    <a class="btn btn-ghost" href="{% url 'medical_app:appointment_detail' appointment.id %}">Detail</a>
+                    {% if appointment.status == "SCHEDULED" and not appointment.have_encounter %}
+                        <a class="btn btn-primary" href="{% url 'medical_app:encounter_create_from_appointment' appointment.id %}">Make Encounter</a>
+                    {% endif %}
+                </div>
+            </li>
+        {% empty %}
+            <li class="empty-state">No appointments found.</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}

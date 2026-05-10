@@ -1,352 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Appointment — MediCore</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+{% extends "base.html" %}
 
-        :root {
-            --navy:        #0b1f3a;
-            --teal:        #0d7377;
-            --teal-light:  #14a085;
-            --teal-pale:   #e8f5f5;
-            --warm-white:  #fdfcfa;
-            --surface:     #f8fafb;
-            --muted:       #7a8a9a;
-            --border:      #d6dde6;
-            --border-soft: #edf1f5;
-            --text:        #1a2a3a;
-            --error-bg:    #fff0f0;
-            --error-text:  #b03030;
-            --shadow-md:   0 8px 32px rgba(11,31,58,0.11);
-            --shadow-lg:   0 20px 60px rgba(11,31,58,0.14);
-        }
+{% block title %}Review Appointments - MediCore HIS{% endblock %}
 
-        html, body { min-height: 100%; }
+{% block page_header %}
+<section class="page-header">
+    <p class="eyebrow">Registration</p>
+    <h1 class="page-title">Review Appointments</h1>
+    <p class="page-subtitle">Approve or reject pending patient appointment requests.</p>
+</section>
+{% endblock %}
 
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background-color: var(--surface);
-            color: var(--text);
-            line-height: 1.6;
-        }
-
-        /* ── Topbar ─────────────────────────── */
-        .topbar {
-            background: var(--navy);
-            padding: 0 32px;
-            height: 60px;
-            display: flex; align-items: center; gap: 16px;
-            box-shadow: 0 2px 12px rgba(11,31,58,0.25);
-            position: sticky; top: 0; z-index: 100;
-        }
-
-        .topbar-icon {
-            width: 34px; height: 34px;
-            background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
-            border-radius: 9px;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-            box-shadow: 0 2px 10px rgba(13,115,119,0.4);
-        }
-
-        .topbar-icon svg {
-            width: 18px; height: 18px;
-            fill: white; stroke: none;
-        }
-
-        .topbar-name {
-            font-family: 'Crimson Pro', Georgia, serif;
-            font-size: 1.2rem; font-weight: 600;
-            color: #fff; letter-spacing: 0.01em;
-        }
-
-        .topbar-sep {
-            width: 1px; height: 20px;
-            background: rgba(255,255,255,0.15);
-            margin: 0 4px;
-        }
-
-        .topbar-section {
-            font-size: 0.8rem; font-weight: 400;
-            color: rgba(255,255,255,0.5);
-            letter-spacing: 0.06em; text-transform: uppercase;
-        }
-
-        /* ── Page ───────────────────────────── */
-        .page-wrapper {
-            max-width: 620px;
-            margin: 0 auto;
-            padding: 44px 24px 60px;
-            animation: fadeUp 0.55s cubic-bezier(0.22,1,0.36,1) both;
-        }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .breadcrumb {
-            display: flex; align-items: center; gap: 6px;
-            font-size: 0.78rem; color: var(--muted);
-            margin-bottom: 20px;
-        }
-
-        .breadcrumb svg {
-            width: 12px; height: 12px;
-            fill: none; stroke: var(--muted);
-            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-        }
-
-        .page-title {
-            font-family: 'Crimson Pro', Georgia, serif;
-            font-size: 2rem; font-weight: 600;
-            color: var(--navy); letter-spacing: -0.015em;
-            margin-bottom: 4px;
-        }
-
-        .page-subtitle {
-            font-size: 0.875rem; color: var(--muted);
-            font-weight: 300; margin-bottom: 32px;
-        }
-
-        /* ── Messages ───────────────────────── */
-        .messages {
-            margin-bottom: 24px;
-            display: flex; flex-direction: column; gap: 8px;
-        }
-
-        .messages p {
-            background: var(--error-bg);
-            color: var(--error-text);
-            border: 1px solid rgba(176,48,48,0.18);
-            border-left: 3px solid var(--error-text);
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 0.85rem; line-height: 1.45;
-        }
-
-        /* ── Card / Form ────────────────────── */
-        .card {
-            background: #fff;
-            border-radius: 18px;
-            border: 1px solid var(--border-soft);
-            box-shadow: var(--shadow-md);
-            overflow: hidden;
-        }
-
-        .card-label {
-            display: flex; align-items: center; gap: 10px;
-            padding: 18px 24px 14px;
-            border-bottom: 1px solid var(--border-soft);
-        }
-
-        .card-label-icon {
-            width: 32px; height: 32px;
-            border-radius: 8px; background: var(--teal-pale);
-            display: flex; align-items: center; justify-content: center;
-        }
-
-        .card-label-icon svg {
-            width: 16px; height: 16px;
-            fill: none; stroke: var(--teal);
-            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-        }
-
-        .card-label-text {
-            font-size: 0.78rem; font-weight: 500;
-            letter-spacing: 0.08em; text-transform: uppercase;
-            color: var(--muted);
-        }
-
-        .form-body {
-            padding: 28px 28px 0;
-        }
-
-        /* Django form.as_p fields */
-        .appt-form p {
-            margin-bottom: 20px;
-        }
-
-        .appt-form label {
-            display: block;
-            font-size: 0.8rem; font-weight: 500;
-            color: var(--navy);
-            letter-spacing: 0.04em; text-transform: uppercase;
-            margin-bottom: 7px;
-        }
-
-        .appt-form input[type="text"],
-        .appt-form input[type="email"],
-        .appt-form input[type="password"],
-        .appt-form input[type="number"],
-        .appt-form input[type="date"],
-        .appt-form input[type="time"],
-        .appt-form input[type="datetime-local"],
-        .appt-form select,
-        .appt-form textarea {
-            width: 100%;
-            padding: 11px 15px;
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.925rem;
-            color: var(--text);
-            background: #fff;
-            transition: border-color 0.18s, box-shadow 0.18s;
-            outline: none;
-            appearance: none;
-        }
-
-        .appt-form textarea {
-            resize: vertical;
-            min-height: 90px;
-        }
-
-        .appt-form input:focus,
-        .appt-form select:focus,
-        .appt-form textarea:focus {
-            border-color: var(--teal);
-            box-shadow: 0 0 0 3px rgba(13,115,119,0.12);
-        }
-
-        .appt-form input[type="checkbox"] {
-            width: 16px; height: 16px;
-            accent-color: var(--teal);
-            margin-right: 8px; vertical-align: middle;
-        }
-
-        .appt-form ul.errorlist {
-            list-style: none; margin: 6px 0 0;
-        }
-
-        .appt-form ul.errorlist li {
-            font-size: 0.8rem; color: var(--error-text);
-        }
-
-        /* Form footer */
-        .form-footer {
-            padding: 20px 28px 28px;
-            display: flex; align-items: center;
-            gap: 12px; flex-wrap: wrap;
-        }
-
-        .btn-primary {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 11px 26px;
-            background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
-            color: #fff;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.9rem; font-weight: 500;
-            border: none; border-radius: 10px;
-            cursor: pointer; letter-spacing: 0.02em;
-            transition: opacity 0.18s, transform 0.15s, box-shadow 0.18s;
-            box-shadow: 0 4px 16px rgba(13,115,119,0.35);
-        }
-
-        .btn-primary svg {
-            width: 15px; height: 15px;
-            fill: none; stroke: #fff;
-            stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
-        }
-
-        .btn-primary:hover {
-            opacity: 0.92; transform: translateY(-1px);
-            box-shadow: 0 6px 22px rgba(13,115,119,0.45);
-        }
-
-        .btn-primary:active { transform: translateY(0); }
-
-        .btn-secondary {
-            display: inline-flex; align-items: center;
-            padding: 11px 22px;
-            background: transparent;
-            color: var(--muted);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.9rem; font-weight: 400;
-            border: 1.5px solid var(--border);
-            border-radius: 10px; cursor: pointer;
-            transition: border-color 0.16s, color 0.16s;
-            text-decoration: none;
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--teal); color: var(--teal);
-        }
-
-        @media (max-width: 600px) {
-            .topbar { padding: 0 18px; }
-            .page-wrapper { padding: 28px 16px 48px; }
-            .page-title { font-size: 1.65rem; }
-            .form-body { padding: 22px 20px 0; }
-            .form-footer { padding: 16px 20px 22px; }
-        }
-    </style>
-</head>
-<body>
-
-    <header class="topbar" role="banner">
-        <a href="#" aria-label="MediCore Home" style="display:flex;align-items:center;gap:12px;text-decoration:none;">
-            <div class="topbar-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="9" y="2" width="6" height="20" rx="1.5"/>
-                    <rect x="2" y="9" width="20" height="6" rx="1.5"/>
-                </svg>
-            </div>
-            <span class="topbar-name">MediCore</span>
-        </a>
-        <div class="topbar-sep"></div>
-        <span class="topbar-section">Appointments</span>
-    </header>
-
-    <main class="page-wrapper" role="main">
-
-        <nav class="breadcrumb" aria-label="Breadcrumb">
-            <span>Appointments</span>
-            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-            <span>New</span>
-        </nav>
-
-        <h1 class="page-title">Create Appointment</h1>
-        <p class="page-subtitle">Schedule a new patient visit</p>
-
-        {% if messages %}
-            <div class="messages" role="alert" aria-live="polite">
-                {% for message in messages %}
-                    <p>{{ message }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <div class="card" role="region" aria-label="Appointment Form">
-            <div class="card-label">
-                <div class="card-label-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+{% block content %}
+<section class="content-card">
+    <form method="post" hidden>{% csrf_token %}</form>
+    <ul class="list-stack">
+        {% for appointment in appointments %}
+            <li class="list-item">
+                <div>
+                    <strong>{{ appointment.scheduledAt }}</strong>
+                    <div class="muted">{{ appointment.patient.name }} with Dr. {{ appointment.doctor.name }}</div>
+                    <div class="muted">{{ appointment.reason }}</div>
                 </div>
-                <span class="card-label-text">Appointment Details</span>
-            </div>
-
-            <form method="post" class="appt-form" novalidate>
-                {% csrf_token %}
-                <div class="form-body">
-                    {{ form.as_p }}
+                <div class="action-row">
+                    <a class="btn btn-ghost" href="{% url 'medical_app:appointment_detail' appointment.id %}">Detail</a>
+                    <form method="post" action="{% url 'medical_app:appointment_review' appointment.id %}">
+                        {% csrf_token %}
+                        <button type="submit" name="action" value="approve" class="btn btn-primary">Approve</button>
+                    </form>
+                    <form method="post" action="{% url 'medical_app:appointment_review' appointment.id %}">
+                        {% csrf_token %}
+                        <button type="submit" name="action" value="reject" class="btn btn-ghost">Reject</button>
+                    </form>
                 </div>
-                <div class="form-footer">
-                    <button type="submit" class="btn-primary">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                        Create Appointment
-                    </button>
-                    <a href="#" class="btn-secondary">Cancel</a>
-                </div>
-            </form>
-        </div>
-
-    </main>
-
-</body>
-</html>
+            </li>
+        {% empty %}
+            <li class="empty-state">No pending appointments found.</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}

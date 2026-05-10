@@ -35,6 +35,7 @@ class Patient(models.Model):
 
 class Appointment(models.Model):
     STATUS_CHOICES = [
+        ("PENDING", "Pending"),
         ("SCHEDULED", "Scheduled"),
         ("COMPLETED", "Completed"),
         ("CANCELLED", "Cancelled"),
@@ -52,10 +53,13 @@ class Appointment(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default="SCHEDULED",
+        default="PENDING",
     )
+    have_encounter = models.BooleanField(default=False)
 
     def clean(self):
+        if not self.doctor_id:
+            return
         if self.doctor.role != "DOCTOR":
             raise ValidationError("Appointment doctor must have DOCTOR role.")
 
@@ -64,7 +68,14 @@ class Appointment(models.Model):
 
 
 class Encounter(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    encounterNumber = models.PositiveIntegerField(primary_key=True, editable=False)
+    appointment = models.OneToOneField(
+        Appointment,
+        on_delete=models.RESTRICT,
+        related_name="encounter",
+        null=True,
+        blank=True,
+    )
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     staff = models.ForeignKey(Staff, on_delete=models.RESTRICT)
     dateTime = models.DateTimeField(auto_now_add=True)
@@ -73,14 +84,29 @@ class Encounter(models.Model):
     def clean(self):
         if self.staff.role != "DOCTOR":
             raise ValidationError("Encounter staff must have DOCTOR role.")
+        if self.appointment:
+            if self.appointment.doctor_id != self.staff_id:
+                raise ValidationError("Encounter appointment must belong to the same doctor.")
+            if self.appointment.patient_id != self.patient_id:
+                raise ValidationError("Encounter appointment must belong to the same patient.")
+
+    def save(self, *args, **kwargs):
+        if self.encounterNumber is None:
+            latest_number = (
+                Encounter.objects
+                .aggregate(models.Max("encounterNumber"))["encounterNumber__max"]
+                or 0
+            )
+            self.encounterNumber = latest_number + 1
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Encounter {self.id} - {self.patient}"
+        return f"Encounter #{self.encounterNumber} - {self.patient}"
 
 
 class MedicalRecordEntry(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    encounter = models.ForeignKey(Encounter, on_delete=models.CASCADE)
+    encounter = models.ForeignKey(Encounter, on_delete=models.CASCADE, db_constraint=False)
 
     diagnosis_encrypted = models.TextField()
     treatmentPlan_encrypted = models.TextField()

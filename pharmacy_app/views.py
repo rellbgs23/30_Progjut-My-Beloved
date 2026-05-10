@@ -1,11 +1,12 @@
+import uuid
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.forms import formset_factory
-from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 
-from auth_app.decorators import staff_role_required
+from auth_app.decorators import deny_to_home, staff_role_required
 from auth_app.models import Staff
 from billing_app.models import AuditLog
 from medical_app.models import Encounter
@@ -26,15 +27,26 @@ def get_current_staff(request):
 @login_required
 @staff_role_required('DOCTOR')
 def create_prescription(request, encounter_id):
-	encounter = get_object_or_404(Encounter, id=encounter_id)
+	encounter = get_object_or_404(Encounter, pk=encounter_id)
 	staff = get_current_staff(request)
 
 	if encounter.staff_id != staff.id:
-		return HttpResponseForbidden('You can only create prescription for your own encounter.')
+		return deny_to_home(request, 'Access denied for this encounter.')
 
-	ItemFormSet = formset_factory(PrescriptionItemForm, extra=1, min_num=1, validate_min=True)
+	ItemFormSet = formset_factory(
+		PrescriptionItemForm,
+		extra=1,
+		min_num=1,
+		validate_min=True,
+		can_delete=True,
+	)
 
 	if request.method == 'POST':
+		existing_prescription = Prescription.objects.filter(encounter=encounter).first()
+		if existing_prescription:
+			messages.info(request, 'This encounter already has a prescription.')
+			return redirect('pharmacy_app:prescription_detail', prescription_id=existing_prescription.id)
+
 		formset = ItemFormSet(request.POST)
 
 		if formset.is_valid():
@@ -45,10 +57,13 @@ def create_prescription(request, encounter_id):
 				)
 
 				for form in formset:
+					if form.cleaned_data.get('DELETE'):
+						continue
+
 					data = form.cleaned_data
 					PrescriptionItem.objects.create(
 						prescription=prescription,
-						itemId=data['itemId'],
+						itemId=f"ITEM-{uuid.uuid4().hex[:10].upper()}",
 						medicineName=data['medicineName'],
 						dosage=data['dosage'],
 						quantity=data['quantity'],
@@ -83,6 +98,19 @@ def prescription_list(request):
 
 
 @login_required
+@pharmacist_required
+def dispense_queue(request):
+	prescriptions = (
+		Prescription.objects
+		.filter(status=Prescription.RxStatus.VALIDATED, dispensedAt__isnull=True)
+		.select_related('encounter__patient', 'encounter__staff')
+		.prefetch_related('items')
+		.order_by('-validatedAt')
+	)
+	return render(request, 'pharmacy_app/dispense_queue.html', {'prescriptions': prescriptions})
+
+
+@login_required
 def prescription_detail(request, prescription_id):
 	prescription = get_object_or_404(
 		Prescription.objects.select_related('encounter__patient', 'encounter__staff', 'dispensedBy').prefetch_related('items'),
@@ -91,13 +119,13 @@ def prescription_detail(request, prescription_id):
 
 	staff = get_current_staff(request)
 	if staff is None:
-		return HttpResponseForbidden('Staff account required.')
+		return deny_to_home(request, 'Staff account required.')
 
 	if staff.role not in ['PHARMACIST', 'DOCTOR']:
-		return HttpResponseForbidden('Access denied.')
+		return deny_to_home(request, 'Access denied for your role.')
 
 	if staff.role == 'DOCTOR' and prescription.encounter.staff_id != staff.id:
-		return HttpResponseForbidden('You can only view your own prescription records.')
+		return deny_to_home(request, 'Access denied for this prescription.')
 
 	return render(request, 'pharmacy_app/prescription_detail.html', {'prescription': prescription})
 

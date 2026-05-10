@@ -52,6 +52,7 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'auth_app.UserAccount'
 
 LOGIN_URL = 'auth_app:login'
+CSRF_FAILURE_VIEW = 'auth_app.views.csrf_failure'
 
 # Konfigurasi keamanan tambahan 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
@@ -124,7 +125,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Jakarta'
 
 USE_I18N = True
 

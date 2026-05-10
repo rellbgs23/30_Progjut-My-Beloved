@@ -10,13 +10,13 @@ class PatientAdmin(admin.ModelAdmin):
 
 @admin.register(Appointment)
 class AppointmentAdmin(admin.ModelAdmin):
-    list_display = ("patient", "doctor", "scheduledAt", "status")
-    list_filter = ("status", "scheduledAt")
+    list_display = ("patient", "doctor", "scheduledAt", "status", "have_encounter")
+    list_filter = ("status", "have_encounter", "scheduledAt")
 
 
 @admin.register(Encounter)
 class EncounterAdmin(admin.ModelAdmin):
-    list_display = ("patient", "staff", "dateTime")
+    list_display = ("encounterNumber", "patient", "staff", "appointment", "dateTime")
     list_filter = ("dateTime",)
 
 

@@ -50,9 +50,8 @@ Repositori ini berisi implementasi Tugas 3 Kelompok untuk mata kuliah Pengantar 
 5. Jalankan migrasi dan seed data.
 
    ```bash
-   python manage.py makemigrations
    python manage.py migrate
-   python manage.py seed_db
+   python seed_data.py
    ```
 
 6. Jalankan server lokal.
@@ -75,6 +74,7 @@ Fitur utama:
 - Pembuatan, validasi, dan dispensing resep oleh `DOCTOR` dan `PHARMACIST`.
 - Proses pembayaran invoice oleh `CASHIER`.
 - Enkripsi data medis sensitif sebelum disimpan ke database.
+- Base layout dan CSS bersama untuk halaman non-billing agar navigasi, alert, form, tabel, dan card konsisten.
 
 Role pengguna:
 
@@ -103,9 +103,9 @@ SQL Injection terjadi ketika input user ikut membentuk perintah SQL tanpa pemisa
 
 Test case yang dicakup:
 
-- `TC-SQLi-01`: login bypass dengan payload seperti `' OR '1'='1`.
-- `TC-SQLi-02`: percobaan ekstraksi data melalui payload `UNION SELECT`.
-- `TC-SQLi-03`: payload pada endpoint pencarian/filter atau parameter ID, termasuk payload UUID tidak valid.
+- `TC-SQLi-01`: login bypass dengan payload klasik seperti `' OR '1'='1' --`.
+- `TC-SQLi-02`: percobaan ekstraksi data melalui search input menggunakan payload `UNION SELECT`.
+- `TC-SQLi-03`: verifikasi white-box bahwa akses database memakai Django ORM atau parameterized query, bukan raw SQL hasil string concatenation.
 
 * **Teknik Mitigasi:**
 
@@ -178,7 +178,7 @@ Test case yang dicakup:
 
 - `TC-CI-01`: payload `<script>alert(...)</script>` tidak dieksekusi di browser.
 - `TC-CI-02`: tag HTML dari input tidak dirender sebagai markup aktif.
-- `TC-CI-03`: validasi/sanitasi input berjalan di backend, bukan hanya di frontend.
+- `TC-CI-03`: payload Server-Side Template Injection seperti `{{7*7}}` ditampilkan sebagai teks literal dan tidak dieksekusi.
 
 * **Teknik Mitigasi:**
 
@@ -233,6 +233,8 @@ Test case yang dicakup:
 - `TC-BA-01`: password tersimpan dalam bentuk hash Django, bukan plaintext.
 - `TC-BA-02`: akun terkunci setelah 5 kali login gagal.
 - `TC-BA-03`: logout menghapus session server-side dan endpoint terlindungi menolak akses tanpa session valid.
+- `TC-BA-04`: halaman terproteksi tidak bisa diakses tanpa login.
+- `TC-BA-05`: pesan error login tidak membocorkan apakah username atau password yang salah.
 
 * **Teknik Mitigasi:**
 
@@ -243,7 +245,8 @@ Test case yang dicakup:
 - Kami membedakan staff internal dan pasien eksternal lewat `mfaEnabled` dan `is_patient`.
 - Kami memakai `django.contrib.auth.logout()` untuk logout dan membatasi endpoint logout agar hanya menerima `POST`.
 - Kami mengatur session agar berakhir saat browser ditutup dan memiliki umur 30 menit melalui `SESSION_COOKIE_AGE = 1800`.
-- Kami menerapkan RBAC dengan `login_required`, `user_passes_test`, dan decorator `staff_role_required`.
+- Kami menerapkan RBAC dengan `login_required`, decorator `staff_role_required`, helper access-denied terpusat, dan pengecekan ownership pada data pasien/dokter.
+- Login gagal dan access denied diarahkan kembali ke halaman home dengan flash message yang konsisten, tanpa membuka data atau fitur yang dilarang.
 
 Password hashing bawaan Django dipakai karena format hash Django menyertakan algoritma, salt, dan iterasi. Bila database terbaca pihak tidak berwenang, password asli tidak langsung tersedia. `authenticate()` juga menjaga proses verifikasi tetap berada pada mekanisme resmi Django, bukan perbandingan manual.
 
@@ -291,20 +294,26 @@ def staff_role_required(*allowed_roles):
 Secure, diambil dari `auth_app/decorators.py`:
 
 ```python
+def deny_to_home(request, message="Access denied."):
+    messages.error(request, message)
+    return redirect("landing_page")
+
+
 def staff_role_required(*allowed_roles):
     def decorator(view_func):
         @wraps(view_func)
         def wrapper(request, *args, **kwargs):
             if not request.user.is_authenticated:
-                return HttpResponseForbidden("Authentication required.")
+                messages.error(request, "Please sign in before accessing that page.")
+                return redirect("auth_app:login")
 
             try:
                 staff = request.user.staff
             except Staff.DoesNotExist:
-                return HttpResponseForbidden("Staff account required.")
+                return deny_to_home(request, "Staff account required.")
 
             if staff.role not in allowed_roles:
-                return HttpResponseForbidden("Access denied.")
+                return deny_to_home(request, "Access denied for your role.")
 
             return view_func(request, *args, **kwargs)
 
@@ -424,68 +433,89 @@ Secure, diambil dari `auth_app/templates/auth_app/login.html`:
 
 ## C. Checklist Test Case Secure Coding
 
+Bagian ini mengikuti format test case umum yang diberikan. Screenshot bukti pengujian disimpan dengan pola `docs/screenshots/general/<TC-ID>.png` dan direferensikan langsung pada baris TC yang sesuai.
+
 ### SQL Injection
 
-| ID | Skenario | Ekspektasi | Bukti yang Dicatat |
-| --- | --- | --- | --- |
-| TC-SQLi-01 | Login memakai payload `admin' OR '1'='1` | Login gagal dan tidak ada bypass autentikasi | Screenshot pesan gagal login |
-| TC-SQLi-02 | Payload `UNION SELECT` pada input pencarian/filter/form | Data user lain tidak terekstrak | Screenshot hasil request dan database tetap normal |
-| TC-SQLi-03 | Payload SQL pada parameter ID, misalnya `/medical/records/1 OR 1=1/` | Request ditolak/404 dan query tidak dieksekusi sebagai SQL | Screenshot response 404 atau hasil test |
+| TC-ID | Nama TC | Skenario | Jenis | Deskripsi | Langkah | Contoh Input | Hasil yang Diharapkan | CWE | Status Pengujian | Screenshot |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-SQLi-01 | Login Bypass via SQL Injection | Semua (1-10) | SQL Injection | Mencoba melewati autentikasi login dengan SQL injection klasik. | 1. Buka halaman login aplikasi.<br>2. Masukkan payload pada field username dan/atau password.<br>3. Submit form. | Username: `' OR '1'='1' --`<br>Password: bebas | Login gagal; response menampilkan pesan `Username atau password salah`; tidak ada redirect ke dashboard. | CWE-89 | Lulus | ![TC-SQLi-01](docs/screenshots/general/TC-SQLi-01.png) |
+| TC-SQLi-02 | Data Extraction via Search Input | Semua (1-10) | SQL Injection | Mencoba mengekstrak data dari tabel lain menggunakan UNION-based injection. | 1. Login sebagai user valid.<br>2. Gunakan fitur pencarian encounter di patient portal.<br>3. Masukkan payload `UNION SELECT`. | Query: `' UNION SELECT username, password, null FROM users --` | Aplikasi mengembalikan hasil pencarian normal atau pesan kosong/generik; tidak menampilkan data tabel user; tidak ada stack trace atau detail SQL error. | CWE-89 | Lulus | ![TC-SQLi-02](docs/screenshots/general/TC-SQLi-02.png) |
+| TC-SQLi-03 | Parameterized Query Verification (White-box) | Semua (1-10) | SQL Injection | Verifikasi kode menggunakan parameterized query atau ORM, bukan string concatenation. | 1. Review source code fungsi yang berinteraksi dengan database.<br>2. Cari pola berbahaya seperti `f"SELECT ... {user_input}"`, `"SELECT ..." + var`, `format()`, atau `%` formatting pada raw SQL. | Code review, tidak ada input runtime. | Tidak ditemukan raw SQL dengan string concatenation dari input user; query aplikasi menggunakan Django ORM atau parameterized query. | CWE-89 | Lulus | ![TC-SQLi-03](docs/screenshots/general/TC-SQLi-03.png) |
 
 ### Code Injection dan XSS
 
-| ID | Skenario | Ekspektasi | Bukti yang Dicatat |
-| --- | --- | --- | --- |
-| TC-CI-01 | Input `<script>alert(1)</script>` pada field yang menerima teks | Script tidak berjalan di browser | Screenshot halaman setelah submit |
-| TC-CI-02 | Input tag HTML seperti `<b>Injected</b>` | Tag tampil sebagai teks biasa atau ditolak form | Screenshot output/validation error |
-| TC-CI-03 | Payload karakter tidak sesuai allowlist di registrasi pasien | Backend menolak input dan data tidak tersimpan | Screenshot error "Nama hanya boleh..." |
+| TC-ID | Nama TC | Skenario | Jenis | Deskripsi | Langkah | Contoh Input | Hasil yang Diharapkan | CWE | Status Pengujian | Screenshot |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-CI-01 | Script Tag Injection (Stored XSS / Reflected XSS) | Semua (1-10) | Code Injection (XSS) | Menyisipkan script HTML berbahaya ke field input yang ditampilkan kembali. | 1. Login sebagai user valid.<br>2. Temukan field input yang hasilnya ditampilkan kembali, misalnya reason appointment atau profil pasien.<br>3. Masukkan payload XSS.<br>4. Simpan dan lihat halaman yang menampilkan data tersebut. | `<script>alert('XSS')</script>` | Script tidak dieksekusi; teks ditolak oleh validasi atau tampil sebagai literal; tidak muncul alert box. | CWE-79 | Lulus | ![TC-CI-01](docs/screenshots/general/TC-CI-01.png) |
+| TC-CI-02 | HTML Injection via Input Field | Semua (1-10) | Code Injection (HTML Injection) | Mencoba menyimpan tag HTML dan event handler berbahaya pada input user. | 1. Login sebagai user valid.<br>2. Masukkan payload HTML pada field yang ditampilkan kembali.<br>3. Submit form dan cek halaman hasil. | `<h1>Hacked</h1><img src=x onerror=alert(1)>` | Tag HTML tidak dirender sebagai HTML aktif; payload ditampilkan sebagai teks biasa atau ditolak oleh validasi form. | CWE-79 | Lulus | ![TC-CI-02](docs/screenshots/general/TC-CI-02.png) |
+| TC-CI-03 | Template Injection (untuk Django/Jinja2) | Semua (1-10) | Code Injection (SSTI) | Mencoba mengeksploitasi Server-Side Template Injection. | 1. Login sebagai user valid.<br>2. Masukkan payload template expression pada input teks.<br>3. Simpan dan lihat apakah expression dievaluasi server. | `{{7*7}}` atau `{{config.SECRET_KEY}}` | Input ditampilkan sebagai teks literal, bukan `49`; `SECRET_KEY` atau informasi server tidak bocor. | CWE-94 | Lulus | ![TC-CI-03](docs/screenshots/general/TC-CI-03.png) |
 
 ### Broken Authentication
 
-| ID | Skenario | Ekspektasi | Bukti yang Dicatat |
-| --- | --- | --- | --- |
-| TC-BA-01 | Cek password user di database | Password tersimpan sebagai hash Django, bukan plaintext | Screenshot database/admin/shell |
-| TC-BA-02 | Login gagal 5 kali berturut-turut | Akun terkunci selama 15 menit | Screenshot pesan akun terkunci |
-| TC-BA-03 | Logout lalu akses endpoint protected | User diarahkan ke login atau menerima 403 | Screenshot setelah akses ulang endpoint |
+| TC-ID | Nama TC | Skenario | Jenis | Deskripsi | Langkah | Contoh Input | Hasil yang Diharapkan | CWE | Status Pengujian | Screenshot |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-BA-01 | Password Hashing Verification (White-box) | Semua (1-10) | Broken Authentication | Verifikasi bahwa password tidak disimpan dalam plaintext di database. | 1. Register atau buat akun user baru dengan password `TestPassword123`.<br>2. Buka database SQLite `db.sqlite3`.<br>3. Query kolom password untuk user tersebut. | Query database: `SELECT password FROM users WHERE username='testuser';` | Nilai kolom password berupa hash seperti `pbkdf2_sha256$...`; tidak ada password plaintext `TestPassword123`. | CWE-256, CWE-916 | Lulus | ![TC-BA-01](docs/screenshots/general/TC-BA-01.png) |
+| TC-BA-02 | Brute Force / Rate Limiting | Semua (1-10) | Broken Authentication | Melakukan percobaan login berulang dengan password salah. | 1. Lakukan 6 kali percobaan login dengan username valid dan password salah.<br>2. Catat respons pada percobaan ke-6. | Username valid.<br>Password: `WrongPass1`, `WrongPass2`, ..., `WrongPass6` | Pada percobaan ke-6 atau setelah threshold, sistem menampilkan pesan akun terkunci sementara; login tidak dapat dilanjutkan sementara. | CWE-307 | Lulus | ![TC-BA-02](docs/screenshots/general/TC-BA-02.png) |
+| TC-BA-03 | Session Token Invalidation setelah Logout | Semua (1-10) | Broken Authentication | Memastikan session token tidak dapat digunakan setelah logout. | 1. Login dan catat nilai session cookie.<br>2. Logout dari aplikasi.<br>3. Tanpa login ulang, akses halaman protected memakai cookie lama. | Cookie: `sessionid=<nilai sebelum logout>` | Server redirect ke halaman login atau memberi HTTP 401/403; tidak ada akses ke halaman terproteksi. | CWE-613 | Lulus | ![TC-BA-03](docs/screenshots/general/TC-BA-03.png) |
+| TC-BA-04 | Akses Halaman Terproteksi Tanpa Login | Semua (1-10) | Broken Authentication | Mencoba mengakses URL yang hanya boleh diakses user login secara langsung. | 1. Pastikan tidak ada session aktif.<br>2. Akses langsung URL terproteksi aplikasi hospital. | Endpoint contoh: `/patient/dashboard/`, `/patient/appointments/new/`, `/medical/appointments/new/`, `/pharmacy/prescriptions/` | Server redirect ke halaman login; konten halaman terproteksi tidak ditampilkan. | CWE-306 | Lulus | ![TC-BA-04](docs/screenshots/general/TC-BA-04.png) |
+| TC-BA-05 | Informasi Error yang Tidak Informatif | Semua (1-10) | Broken Authentication | Memastikan pesan error login tidak membocorkan apakah username atau password yang salah. | 1. Login dengan username tidak terdaftar dan password sembarang.<br>2. Login dengan username valid dan password salah.<br>3. Bandingkan pesan error keduanya. | Username tidak terdaftar + password bebas.<br>Username valid + password salah. | Kedua skenario menampilkan pesan yang sama, yaitu `Username atau password salah`; tidak ada pesan berbeda seperti `Username tidak ditemukan` atau `Password salah`. | CWE-204 | Lulus | ![TC-BA-05](docs/screenshots/general/TC-BA-05.png) |
 
 ### CSRF
 
-| ID | Skenario | Ekspektasi | Bukti yang Dicatat |
-| --- | --- | --- | --- |
-| TC-CSRF-01 | Inspect form POST | Ada hidden input `csrfmiddlewaretoken` | Screenshot inspect element |
-| TC-CSRF-02 | Kirim POST tanpa token memakai Postman/curl | Server mengembalikan HTTP 403 | Screenshot response 403 |
-| TC-CSRF-03 | Uji request dari origin tidak terdaftar | Tidak ada akses cross-origin bebas; aplikasi berjalan same-origin | Screenshot header/response pengujian |
+| TC-ID | Nama TC | Skenario | Jenis | Deskripsi | Langkah | Contoh Input | Hasil yang Diharapkan | CWE | Status Pengujian | Screenshot |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-CSRF-01 | CSRF Token Presence on Forms | Semua (1-10) | CSRF | Memastikan setiap form POST memiliki CSRF token. | 1. Login sebagai user valid.<br>2. Buka semua form yang melakukan operasi write.<br>3. Inspect source HTML form tersebut. | Inspeksi HTML. | Setiap form POST memiliki hidden input `csrfmiddlewaretoken`. | CWE-352 | Lulus | ![TC-CSRF-01](docs/screenshots/general/TC-CSRF-01.png) |
+| TC-CSRF-02 | Request dengan CSRF Token Invalid Ditolak | Semua (1-10) | CSRF | Mengirim POST request dengan CSRF token yang salah atau palsu. | 1. Login sebagai user valid.<br>2. Intercept request POST.<br>3. Ubah nilai `csrfmiddlewaretoken` menjadi `invalid_token_12345`.<br>4. Forward request. | `csrfmiddlewaretoken=invalid_token_12345` | Server merespons HTTP 403 Forbidden; operasi tidak dieksekusi. | CWE-352 | Lulus | ![TC-CSRF-02](docs/screenshots/general/TC-CSRF-02.png) |
+| TC-CSRF-03 | Simulasi Cross-Origin Request (Tanpa Token) | Semua (1-10) | CSRF | Simulasi serangan CSRF dari halaman eksternal menggunakan HTML form sederhana. | 1. Buat file HTML lokal `csrf_attack.html` dengan form POST ke endpoint target.<br>2. User yang sudah login membuka file tersebut dan submit form.<br>3. Lihat apakah server mengeksekusi request. | `<form action="http://localhost:8000/patient/appointments/new/" method="POST">` dengan field berbahaya tanpa token. | Server menolak request dengan HTTP 403; operasi tidak dieksekusi karena tidak ada CSRF token valid. | CWE-352 | Lulus | ![TC-CSRF-03](docs/screenshots/general/TC-CSRF-03.png) |
 
-## D. TODO Screenshot
+## D. Daftar Screenshot Bukti Pengujian
 
-- [ ] Screenshot halaman login normal.
-- [ ] Screenshot login gagal dengan payload SQL Injection untuk `TC-SQLi-01`.
-- [ ] Screenshot payload `UNION SELECT` atau payload SQL lain yang tidak mengekstrak data untuk `TC-SQLi-02`.
-- [ ] Screenshot request parameter ID tidak valid yang menghasilkan 404 untuk `TC-SQLi-03`.
-- [ ] Screenshot input `<script>alert(1)</script>` yang tidak dieksekusi untuk `TC-CI-01`.
-- [ ] Screenshot payload HTML yang tampil sebagai teks atau ditolak form untuk `TC-CI-02`.
-- [ ] Screenshot validasi allowlist backend pada registrasi pasien untuk `TC-CI-03`.
-- [ ] Screenshot password user di database/shell yang berbentuk hash untuk `TC-BA-01`.
-- [ ] Screenshot akun terkunci setelah 5 kali gagal login untuk `TC-BA-02`.
-- [ ] Screenshot akses endpoint protected setelah logout untuk `TC-BA-03`.
-- [ ] Screenshot inspect element form POST yang menunjukkan `csrfmiddlewaretoken` untuk `TC-CSRF-01`.
-- [ ] Screenshot request POST tanpa CSRF token yang menghasilkan HTTP 403 untuk `TC-CSRF-02`.
-- [ ] Screenshot pengujian cross-origin/same-origin policy untuk `TC-CSRF-03`.
-- [ ] Screenshot dashboard masing-masing role: patient, doctor, pharmacist, cashier.
-- [ ] Screenshot halaman access denied/403 saat role mencoba membuka endpoint yang bukan haknya.
+| TC-ID | File Screenshot | Ringkasan Bukti |
+| --- | --- | --- |
+| TC-SQLi-01 | `docs/screenshots/general/TC-SQLi-01.png` | Login dengan payload SQL injection gagal dan pesan error tetap generik. |
+| TC-SQLi-02 | `docs/screenshots/general/TC-SQLi-02.png` | Search input dengan payload `UNION SELECT` tidak menampilkan data user atau error SQL. |
+| TC-SQLi-03 | `docs/screenshots/general/TC-SQLi-03.png` | Review kode menunjukkan penggunaan ORM/parameterized query. |
+| TC-CI-01 | `docs/screenshots/general/TC-CI-01.png` | Payload `<script>` tidak dieksekusi. |
+| TC-CI-02 | `docs/screenshots/general/TC-CI-02.png` | Payload HTML tidak dirender sebagai markup aktif. |
+| TC-CI-03 | `docs/screenshots/general/TC-CI-03.png` | Payload template tidak dievaluasi menjadi output server-side. |
+| TC-BA-01 | `docs/screenshots/general/TC-BA-01.png` | Password tersimpan sebagai hash Django. |
+| TC-BA-02 | `docs/screenshots/general/TC-BA-02.png` | Akun terkunci sementara setelah percobaan login gagal berulang. |
+| TC-BA-03 | `docs/screenshots/general/TC-BA-03.png` | Cookie session lama tidak dapat mengakses halaman protected setelah logout. |
+| TC-BA-04 | `docs/screenshots/general/TC-BA-04.png` | Endpoint protected redirect ke login saat belum autentikasi. |
+| TC-BA-05 | `docs/screenshots/general/TC-BA-05.png` | Pesan error login sama untuk username tidak dikenal dan password salah. |
+| TC-CSRF-01 | `docs/screenshots/general/TC-CSRF-01.png` | Form POST memiliki hidden input `csrfmiddlewaretoken`. |
+| TC-CSRF-02 | `docs/screenshots/general/TC-CSRF-02.png` | Token CSRF invalid menghasilkan HTTP 403. |
+| TC-CSRF-03 | `docs/screenshots/general/TC-CSRF-03.png` | Cross-origin POST tanpa token valid menghasilkan HTTP 403. |
 
 ## E. Catatan Verifikasi Lokal
 
 Test otomatis yang relevan dapat dijalankan dengan:
 
 ```bash
-python manage.py test
+python manage.py test auth_app core_app medical_app pharmacy_app
 ```
 
 Beberapa test yang mendukung rubrik:
 
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_sqli_01_login_bypass_payload_fails`
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_sqli_02_union_payload_on_input_does_not_extract_data`
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_sqli_03_non_billing_source_uses_orm_not_raw_sql_concat`
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_ci_01_script_tag_input_is_rejected`
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_ci_02_html_injection_input_is_rejected`
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_ci_03_ssti_payload_is_not_executed`
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_ba_01_password_is_hashed`
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_ba_02_account_locks_after_repeated_failed_login`
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_ba_03_old_session_cookie_cannot_access_after_logout`
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_ba_04_protected_pages_redirect_without_login`
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_ba_05_login_error_message_is_generic`
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_csrf_01_post_forms_render_csrf_token`
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_csrf_02_invalid_csrf_token_is_rejected`
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_csrf_03_cross_origin_post_without_token_is_rejected`
 - `auth_app.tests.AuthSecurityTests.test_account_locked_after_five_failed_attempts`
 - `auth_app.tests.AuthSecurityTests.test_locked_account_cannot_login_even_with_correct_password`
+- `auth_app.tests.AuthSecurityTests.test_wrong_password_stays_on_login_page_with_message`
+- `auth_app.tests.AuthSecurityTests.test_logout_requires_post_csrf_token_when_enforced`
 - `core_app.tests.PatientPortalTests.test_self_registration_rejects_script_payload`
 - `core_app.tests.PatientPortalTests.test_patient_cannot_access_other_patient_encounter`
 - `medical_app.tests.MedicalSecurityTests.test_invalid_uuid_payload_does_not_execute_sql_injection`

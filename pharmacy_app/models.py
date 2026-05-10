@@ -6,6 +6,17 @@ from django.core.exceptions import ValidationError
 from medical_app.models import Encounter
 from auth_app.models import Staff
 
+
+class Medicine(models.Model):
+    name = models.CharField(max_length=200, primary_key=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class Prescription(models.Model):
     class RxStatus(models.TextChoices):
         CREATED = 'CREATED', 'Created'
@@ -14,7 +25,7 @@ class Prescription(models.Model):
         INVALID = 'INVALID', 'Invalid'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    encounter = models.OneToOneField(Encounter, on_delete=models.CASCADE)
+    encounter = models.OneToOneField(Encounter, on_delete=models.CASCADE, db_constraint=False)
     status = models.CharField(max_length=20, choices=RxStatus.choices, default=RxStatus.CREATED)
     digitalSignature = models.TextField(null=True, blank=True) # <<crypto>>
     validatedAt = models.DateTimeField(null=True, blank=True)
@@ -68,8 +79,13 @@ class Prescription(models.Model):
 class PrescriptionItem(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     prescription = models.ForeignKey(Prescription, on_delete=models.CASCADE, related_name='items')
-    itemId = models.CharField(max_length=50)
-    medicineName = models.CharField(max_length=200)
+    itemId = models.CharField(max_length=50, unique=True)
+    medicineName = models.ForeignKey(
+        Medicine,
+        on_delete=models.RESTRICT,
+        db_column='medicineName',
+        to_field='name',
+    )
     dosage = models.CharField(max_length=100)
     quantity = models.PositiveIntegerField()
     instruction = models.TextField()
