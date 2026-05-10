@@ -114,10 +114,10 @@ class Tugas3GeneralSecurityTestCases(TestCase):
                 "username": "' OR '1'='1' --",
                 "password": "bebas",
             },
-            follow=True,
         )
 
-        self.assertRedirects(response, reverse("landing_page"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "auth_app/login.html")
         self.assertContains(response, "Username atau password salah")
         self.assertNotIn("_auth_user_id", self.client.session)
 
@@ -212,7 +212,7 @@ class Tugas3GeneralSecurityTestCases(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Appointment.objects.filter(reason=payload).exists())
-        self.assertNotContains(response, "49")
+        self.assertContains(response, "Keluhan hanya boleh")
         self.assertNotContains(response, settings.SECRET_KEY)
 
     def test_tc_ba_01_password_is_hashed(self):
@@ -323,6 +323,8 @@ class Tugas3GeneralSecurityTestCases(TestCase):
         )
 
         self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "auth_app/forbidden.html")
+        self.assertContains(response, "Forbidden Request", status_code=403)
         self.assertFalse(Appointment.objects.filter(reason="Kontrol rutin").exists())
 
     def test_tc_csrf_03_cross_origin_post_without_token_is_rejected(self):
@@ -340,4 +342,6 @@ class Tugas3GeneralSecurityTestCases(TestCase):
         )
 
         self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "auth_app/forbidden.html")
+        self.assertContains(response, "Forbidden Request", status_code=403)
         self.assertFalse(Appointment.objects.filter(reason="CSRF attack attempt").exists())

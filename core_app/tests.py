@@ -209,6 +209,8 @@ class PatientPortalTests(TestCase):
 		)
 
 		self.assertEqual(response.status_code, 403)
+		self.assertTemplateUsed(response, "auth_app/forbidden.html")
+		self.assertContains(response, "Forbidden Request", status_code=403)
 
 	def test_auth_profile_shows_patient_edit_profile_link(self):
 		self.client.login(username="patient1", password="StrongPassword123!")

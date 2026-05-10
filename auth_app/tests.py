@@ -34,9 +34,10 @@ class AuthSecurityTests(TestCase):
         response = self.client.post(reverse("auth_app:login"), {
             "username": "doctor1",
             "password": "StrongPassword123!",
-        }, follow=True)
+        })
 
-        self.assertRedirects(response, reverse("landing_page"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "auth_app/login.html")
         self.assertContains(response, "MFA belum aktif")
 
     def test_account_locked_after_six_failed_attempts(self):
@@ -60,21 +61,23 @@ class AuthSecurityTests(TestCase):
         response = self.client.post(reverse("auth_app:login"), {
             "username": "doctor1",
             "password": "StrongPassword123!",
-        }, follow=True)
+        })
 
-        self.assertRedirects(response, reverse("landing_page"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "auth_app/login.html")
         self.assertContains(response, "Akun terkunci")
         self.assertContains(response, "menit")
 
-    def test_wrong_password_redirects_home_with_message(self):
+    def test_wrong_password_stays_on_login_page_with_message(self):
         response = self.client.post(reverse("auth_app:login"), {
             "username": "doctor1",
             "password": "WrongPassword!",
-        }, follow=True)
+        })
 
-        self.assertRedirects(response, reverse("landing_page"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "auth_app/login.html")
         self.assertContains(response, "Username atau password salah")
-        self.assertContains(response, "Sisa percobaan sebelum akun terkunci: 5")
+        self.assertContains(response, "Sisa percobaan sebelum akun terkunci: 4")
 
     def test_authenticated_user_cannot_open_login_page(self):
         self.client.force_login(self.user)
@@ -98,3 +101,5 @@ class AuthSecurityTests(TestCase):
         response = csrf_client.post(reverse("auth_app:logout"))
 
         self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "auth_app/forbidden.html")
+        self.assertContains(response, "Forbidden Request", status_code=403)

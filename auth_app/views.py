@@ -13,9 +13,9 @@ MAX_FAILED_LOGIN_ATTEMPTS = 5
 LOCKOUT_MINUTES = 15
 
 
-def _login_failure(request, message):
+def _login_failure(request, form, message):
     messages.error(request, message)
-    return redirect("landing_page")
+    return render(request, "auth_app/login.html", {"form": form})
 
 
 def _remaining_attempts_message(remaining_attempts):
@@ -49,11 +49,12 @@ def login_view(request):
             except UserAccount.DoesNotExist:
                 return _login_failure(
                     request,
+                    form,
                     _remaining_attempts_message(MAX_FAILED_LOGIN_ATTEMPTS - 1),
                 )
 
             if user_obj.is_locked():
-                return _login_failure(request, _lockout_message(user_obj))
+                return _login_failure(request, form, _lockout_message(user_obj))
 
             if user_obj.lockedUntil is not None and user_obj.lockedUntil <= timezone.now():
                 user_obj.reset_failed_login()
@@ -66,15 +67,15 @@ def login_view(request):
                 if user_obj.failedLoginAttempts >= MAX_FAILED_LOGIN_ATTEMPTS:
                     user_obj.failedLoginAttempts = 1
                     user_obj.lock_account(minutes=LOCKOUT_MINUTES)
-                    return _login_failure(request, _lockout_message(user_obj))
+                    return _login_failure(request, form, _lockout_message(user_obj))
                 else:
                     user_obj.save(update_fields=["failedLoginAttempts"])
 
                 remaining_attempts = MAX_FAILED_LOGIN_ATTEMPTS - user_obj.failedLoginAttempts
-                return _login_failure(request, _remaining_attempts_message(remaining_attempts))
+                return _login_failure(request, form, _remaining_attempts_message(remaining_attempts))
 
             if not user.authenticate_mfa():
-                return _login_failure(request, "Login ditolak. MFA belum aktif.")
+                return _login_failure(request, form, "Login ditolak. MFA belum aktif.")
 
             user.reset_failed_login()
             login(request, user)
@@ -108,3 +109,11 @@ def profile_view(request):
 def access_denied_view(request):
     messages.error(request, "Access denied for your role.")
     return redirect("landing_page")
+
+
+def csrf_failure(request, reason=""):
+    return render(
+        request,
+        "auth_app/forbidden.html",
+        status=403,
+    )
