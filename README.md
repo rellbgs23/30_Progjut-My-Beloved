@@ -474,25 +474,107 @@ Bagian ini mengikuti format test case umum yang diberikan. Screenshot bukti peng
 
 ## D. Daftar Screenshot Bukti Pengujian
 
-| TC-ID | File Screenshot | Ringkasan Bukti |
-| --- | --- | --- |
-| TC-SQLi-01 | `docs/screenshots/general/TC-SQLi-01.png` | Login dengan payload SQL injection gagal dan pesan error tetap generik. |
-| TC-SQLi-02 | `docs/screenshots/general/TC-SQLi-02.png` | Search input dengan payload `UNION SELECT` tidak menampilkan data user atau error SQL. |
-| TC-SQLi-03 | `docs/screenshots/general/TC-SQLi-03.png` | Review kode menunjukkan penggunaan ORM/parameterized query. |
-| TC-SQLi-04a | `docs/screenshots/general/TC-SQLi-04a.png` | Payload `12345' OR '1'='1` pada pencarian riwayat medis tidak dump semua rekam medis. |
-| TC-CI-01 | `docs/screenshots/general/TC-CI-01.png` | Payload `<script>` tidak dieksekusi. |
-| TC-CI-02 | `docs/screenshots/general/TC-CI-02.png` | Payload HTML tidak dirender sebagai markup aktif. |
-| TC-CI-03 | `docs/screenshots/general/TC-CI-03.png` | Payload template tidak dievaluasi menjadi output server-side. |
-| TC-CI-04a | `docs/screenshots/general/TC-CI-04a.png` | Payload script pencuri cookie pada nama pasien/catatan dokter ditolak atau tidak dieksekusi. |
-| TC-BA-01 | `docs/screenshots/general/TC-BA-01.png` | Password tersimpan sebagai hash Django. |
-| TC-BA-02 | `docs/screenshots/general/TC-BA-02.png` | Akun terkunci sementara setelah percobaan login gagal berulang. |
-| TC-BA-03 | `docs/screenshots/general/TC-BA-03.png` | Cookie session lama tidak dapat mengakses halaman protected setelah logout. |
-| TC-BA-04 | `docs/screenshots/general/TC-BA-04.png` | Endpoint protected redirect ke login saat belum autentikasi. |
-| TC-BA-05 | `docs/screenshots/general/TC-BA-05.png` | Pesan error login sama untuk username tidak dikenal dan password salah. |
-| TC-CSRF-01 | `docs/screenshots/general/TC-CSRF-01.png` | Form POST memiliki hidden input `csrfmiddlewaretoken`. |
-| TC-CSRF-02 | `docs/screenshots/general/TC-CSRF-02.png` | Token CSRF invalid menghasilkan HTTP 403. |
-| TC-CSRF-03 | `docs/screenshots/general/TC-CSRF-03.png` | Cross-origin POST tanpa token valid menghasilkan HTTP 403. |
-| TC-CSRF-04a | `docs/screenshots/general/TC-CSRF-04a.png` | POST edit data pasien tanpa token valid menghasilkan HTTP 403 dan data tidak berubah. |
+### TC-SQLi-01
+- **Ringkasan Bukti:** Login dengan payload SQL injection gagal dan pesan error tetap generik.
+- **Screenshot:**
+
+    ![TC-SQLi-01](docs/screenshots/general/TC-SQLi-01.png)
+
+### TC-SQLi-02
+- **Ringkasan Bukti:** Search input dengan payload `UNION SELECT` tidak menampilkan data user atau error SQL.
+- **Screenshot:**
+
+    ![TC-SQLi-02](docs/screenshots/general/TC-SQLi-02.png)
+
+### TC-SQLi-03
+- **Ringkasan Bukti:** Review kode menunjukkan penggunaan ORM/parameterized query. 
+- **Screenshot:** Tidak ada penggunaan query biasa, semuanya menggunakan ORM dan parameterized query.
+
+    ![TC-SQLi-03](docs/screenshots/general/TC-SQLi-03.png)
+
+### TC-SQLi-04a
+- **Ringkasan Bukti:** Payload `12345' OR '1'='1` pada pencarian riwayat medis tidak dump semua rekam medis.
+- **Screenshot:**
+
+    ![TC-SQLi-04a](docs/screenshots/general/TC-SQLi-04a.png)
+
+### TC-CI-01
+- **Ringkasan Bukti:** Payload `<script>` tidak dieksekusi.
+- **Screenshot:**
+
+    ![TC-CI-01](docs/screenshots/general/TC-CI-01.png)
+
+### TC-CI-02
+- **Ringkasan Bukti:** Payload HTML tidak dirender sebagai markup aktif.
+- **Screenshot:**
+
+    ![TC-CI-02](docs/screenshots/general/TC-CI-02.png)
+
+### TC-CI-03
+- **Ringkasan Bukti:** Payload template tidak dievaluasi menjadi output server-side.
+- **Screenshot:**
+
+    ![TC-CI-03](docs/screenshots/general/TC-CI-03.png)
+
+### TC-CI-04a
+- **Ringkasan Bukti:** Payload script pencuri cookie pada nama pasien/catatan dokter ditolak atau tidak dieksekusi.
+- **Screenshot:**
+
+    ![TC-CI-04a](docs/screenshots/general/TC-CI-04a.png)
+
+### TC-BA-01
+- **Ringkasan Bukti:** Password tersimpan sebagai hash Django.
+- **Screenshot:**
+
+    ![TC-BA-01](docs/screenshots/general/TC-BA-01.png)
+
+### TC-BA-02
+- **Ringkasan Bukti:** Akun terkunci sementara setelah percobaan login gagal berulang.
+- **Screenshot:**
+
+    ![TC-BA-02](docs/screenshots/general/TC-BA-02.png)
+
+### TC-BA-03
+- **Ringkasan Bukti:** Cookie session lama tidak dapat mengakses halaman protected setelah logout.
+- **Screenshot:**
+
+    ![TC-BA-03](docs/screenshots/general/TC-BA-03.png)
+
+### TC-BA-04
+- **Ringkasan Bukti:** Endpoint protected redirect ke login saat belum autentikasi.
+- **Screenshot:**
+
+    ![TC-BA-04](docs/screenshots/general/TC-BA-04.png)
+
+### TC-BA-05
+- **Ringkasan Bukti:** Pesan error login sama untuk username tidak dikenal dan password salah.
+- **Screenshot:**
+
+    ![TC-BA-05](docs/screenshots/general/TC-BA-05.png)
+
+### TC-CSRF-01
+- **Ringkasan Bukti:** Form POST memiliki hidden input `csrfmiddlewaretoken`.
+- **Screenshot:**
+
+    ![TC-CSRF-01](docs/screenshots/general/TC-CSRF-01.png)
+
+### TC-CSRF-02
+- **Ringkasan Bukti:** Token CSRF invalid menghasilkan HTTP 403.
+- **Screenshot:**
+
+    ![TC-CSRF-02](docs/screenshots/general/TC-CSRF-02.png)
+
+### TC-CSRF-03
+- **Ringkasan Bukti:** Cross-origin POST tanpa token valid menghasilkan HTTP 403.
+- **Screenshot:**
+
+    ![TC-CSRF-03](docs/screenshots/general/TC-CSRF-03.png)
+
+### TC-CSRF-04a
+- **Ringkasan Bukti:** POST edit data pasien tanpa token valid menghasilkan HTTP 403 dan data tidak berubah.
+- **Screenshot:**
+
+    ![TC-CSRF-04a](docs/screenshots/general/TC-CSRF-04a.png)
 
 ## E. Catatan Verifikasi Lokal
 
