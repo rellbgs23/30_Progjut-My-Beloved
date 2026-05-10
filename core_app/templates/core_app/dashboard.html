@@ -1,60 +1,112 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block title %}Patient Dashboard - MediCore HIS{% endblock %}
+{% block title %}
+  Patient Dashboard - MediCore HIS
+{% endblock %}
 
 {% block page_header %}
-<section class="page-header">
+  <section class="page-header">
     <p class="eyebrow">Patient Portal</p>
     <h1 class="page-title">Welcome, {{ patient.name }}</h1>
-    <p class="page-subtitle">MRN: <strong>{{ patient.mrn }}</strong></p>
-</section>
+    <p class="page-subtitle">
+      MRN: <strong>{{ patient.mrn }}</strong>
+    </p>
+  </section>
 {% endblock %}
 
 {% block content %}
-<div class="grid grid-sidebar">
+  <style>
+    .grid.grid-sidebar {
+      display: grid;
+      grid-template-columns: 1.8fr 1.2fr;
+      gap: 24px;
+      align-items: start;
+    }
+    
+    .data-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border, #edf1f5);
+      gap: 20px;
+    }
+    
+    .data-row:last-child {
+      border-bottom: none;
+    }
+    
+    .data-label {
+      color: var(--muted, #7a8a9a);
+      font-weight: 500;
+      min-width: 100px;
+    }
+    
+    .data-value {
+      color: var(--navy, #0b1f3a);
+      font-weight: 600;
+      text-align: right;
+      word-break: break-word;
+    }
+    
+    @media (max-width: 768px) {
+      .grid.grid-sidebar {
+        grid-template-columns: 1fr;
+      }
+      .data-row {
+        flex-direction: column;
+        text-align: left;
+      }
+      .data-value {
+        text-align: left;
+        margin-top: 4px;
+      }
+    }
+  </style>
+  <div class="grid grid-sidebar">
     <section class="content-card">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <span class="stat-label">Appointments</span>
-                <strong class="stat-value">{{ appointment_count }}</strong>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">Encounters</span>
-                <strong class="stat-value">{{ encounter_count }}</strong>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">Unpaid Invoices</span>
-                <strong class="stat-value">{{ unpaid_invoice_count }}</strong>
-            </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-label">Appointments</span>
+          <strong class="stat-value">{{ appointment_count }}</strong>
         </div>
+        <div class="stat-card">
+          <span class="stat-label">Encounters</span>
+          <strong class="stat-value">{{ encounter_count }}</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Unpaid Invoices</span>
+          <strong class="stat-value">{{ unpaid_invoice_count }}</strong>
+        </div>
+      </div>
 
-        <div class="action-row">
-            <a class="btn btn-primary" href="{% url 'core_app:patient_request_appointment' %}">Request Appointment</a>
-            <a class="btn btn-ghost" href="{% url 'core_app:patient_appointments' %}">My Appointments</a>
-            <a class="btn btn-ghost" href="{% url 'core_app:patient_encounters' %}">Medical History</a>
-            <a class="btn btn-ghost" href="{% url 'core_app:patient_invoices' %}">Invoices</a>
-        </div>
+      <div class="action-row" style="margin-top: 24px;">
+        <a class="btn btn-primary" href="{% url 'core_app:patient_request_appointment' %}">Request Appointment</a>
+        <a class="btn btn-ghost" href="{% url 'core_app:patient_appointments' %}">My Appointments</a>
+        <a class="btn btn-ghost" href="{% url 'core_app:patient_encounters' %}">Medical History</a>
+        <a class="btn btn-ghost" href="{% url 'core_app:patient_invoices' %}">Invoices</a>
+      </div>
     </section>
 
     <aside class="content-card">
-        <h2 class="section-title">Profile</h2>
-        <dl class="data-list">
-            <div class="data-row">
-                <dt class="data-label">Signed in as</dt>
-                <dd class="data-value">{{ request.user.get_username }}</dd>
-            </div>
-            <div class="data-row">
-                <dt class="data-label">Phone</dt>
-                <dd class="data-value">{{ patient.phoneNumber|default:"-" }}</dd>
-            </div>
-            <div class="data-row">
-                <dt class="data-label">Address</dt>
-                <dd class="data-value">{{ patient.address|default:"-" }}</dd>
-            </div>
-        </dl>
-        <div class="action-row">
-            <a class="btn btn-primary" href="{% url 'core_app:patient_edit' patient.id %}">Edit Profile</a>
+      <h2 class="section-title" style="margin-bottom: 16px; color: var(--navy, #0b1f3a);">Profile Overview</h2>
+      <dl class="data-list" style="margin: 0; padding: 0;">
+        <div class="data-row">
+          <dt class="data-label">Signed in as</dt>
+          <dd class="data-value">{{ request.user.get_username }}</dd>
         </div>
+        <div class="data-row">
+          <dt class="data-label">Phone</dt>
+          <dd class="data-value">{{ patient.phoneNumber|default:'-' }}</dd>
+        </div>
+        <div class="data-row">
+          <dt class="data-label">Address</dt>
+          <dd class="data-value">{{ patient.address|default:'-' }}</dd>
+        </div>
+      </dl>
+      <div class="action-row" style="margin-top: 24px; justify-content: flex-end;">
+        <a class="btn btn-primary" href="{% url 'core_app:patient_edit' patient.id %}" style="width: 100%; text-align: center;">Edit Profile</a>
+      </div>
     </aside>
-</div>
+  </div>
 {% endblock %}

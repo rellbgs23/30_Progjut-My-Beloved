@@ -20,8 +20,7 @@ def _login_failure(request, form, message):
 
 def _remaining_attempts_message(remaining_attempts):
     return (
-        "Username atau password salah. "
-        f"Sisa percobaan sebelum akun terkunci: {remaining_attempts}."
+        "Username atau password salah."
     )
     
 def _default_failed_message():
