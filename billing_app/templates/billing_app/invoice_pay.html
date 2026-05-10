@@ -1,194 +1,230 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Detail Tagihan — MediCore HIS</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-    <style>
-      :root {
-        --navy: #0b1f3a;
-        --teal: #0d7377;
-        --surface: #f8fafb;
-        --muted: #7a8a9a;
-        --text: #1a2a3a;
-        --border: #edf1f5;
-      }
-      body {
-        font-family: 'DM Sans', sans-serif;
-        background-color: var(--surface);
-        color: var(--text);
-        padding: 40px;
-        margin: 0;
-      }
-      .container {
-        max-width: 1000px;
-        margin: 0 auto;
-        display: flex;
-        gap: 30px;
-      }
-      .card {
-        background: #fff;
-        padding: 30px;
-        border-radius: 16px;
-        box-shadow: 0 4px 12px rgba(11, 31, 58, 0.04);
-        flex: 1;
-      }
-      h3 {
-        color: var(--navy);
-        margin-top: 0;
-        border-bottom: 1px solid var(--border);
-        padding-bottom: 15px;
-        margin-bottom: 20px;
-      }
-      .info-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 12px;
-        font-size: 0.95rem;
-      }
-      .info-row span {
-        color: var(--muted);
-      }
-      .info-row strong {
-        color: var(--navy);
-      }
-      .total-box {
-        background: #fee2e2;
-        padding: 15px;
-        border-radius: 8px;
-        text-align: center;
-        margin-top: 20px;
-        margin-bottom: 20px;
-      }
-      .total-box h2 {
-        color: #b91c1c;
-        margin: 0;
-        font-size: 1.8rem;
-      }
-      .form-control {
-        width: 100%;
-        padding: 12px;
-        border-radius: 8px;
-        border: 1px solid var(--border);
-        font-family: inherit;
-        margin-bottom: 15px;
-        box-sizing: border-box;
-      }
-      button.btn-primary {
-        width: 100%;
-        padding: 14px;
-        background: var(--teal);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 1rem;
-      }
-      .history-item {
-        padding: 15px;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        margin-bottom: 12px;
-      }
-      .history-item h4 {
-        margin: 0 0 5px 0;
-        color: var(--navy);
-        display: flex;
-        justify-content: space-between;
-      }
-      .history-item p {
-        margin: 0;
-        font-size: 0.85rem;
-        color: var(--muted);
-      }
-      .alert {
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 15px;
-        font-size: 0.9rem;
-      }
-      .alert-error {
-        background: #fee2e2;
-        color: #b91c1c;
-        border: 1px solid #fca5a5;
-      }
-      .alert-success {
-        background: #d1fae5;
-        color: #047857;
-        border: 1px solid #6ee7b7;
-      }
-    </style>
-  </head>
-  <body>
-    <div style="max-width: 1000px; margin: 0 auto 20px;">
-      <a href="{% url 'billing_app:invoice_list' %}" style="color: var(--navy); text-decoration: none; font-weight: 500;">&larr; Kembali ke Daftar Tagihan</a>
+{% extends "base.html" %}
+
+{% block title %}Detail Tagihan - MediCore HIS{% endblock %}
+
+{% block extra_head %}
+<style>
+  .billing-wide {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .billing-back {
+    color: var(--navy);
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-block;
+    margin-bottom: 20px;
+  }
+
+  .billing-detail-grid {
+    display: flex;
+    gap: 30px;
+  }
+
+  .billing-card {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(11, 31, 58, 0.04);
+    flex: 1;
+  }
+
+  .billing-card h3 {
+    color: var(--navy);
+    margin-top: 0;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+  }
+
+  .info-row span {
+    color: var(--muted);
+  }
+
+  .info-row strong {
+    color: var(--navy);
+    text-align: right;
+  }
+
+  .total-box {
+    background: #fee2e2;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    margin: 20px 0;
+  }
+
+  .total-box h2 {
+    color: #b91c1c;
+    margin: 0;
+    font-size: 1.8rem;
+  }
+
+  .billing-form label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--navy);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .billing-form input,
+  .billing-form select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-family: inherit;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+  }
+
+  .billing-submit {
+    width: 100%;
+    padding: 14px;
+    background: var(--teal);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .paid-state {
+    text-align: center;
+    padding: 20px;
+    background: #d1fae5;
+    border-radius: 8px;
+    color: #047857;
+  }
+
+  .paid-state h3 {
+    border: none;
+    margin: 0;
+    color: inherit;
+  }
+
+  .paid-state p {
+    margin: 5px 0 0;
+    font-size: 0.9rem;
+  }
+
+  .history-card {
+    background: #fafbfc;
+  }
+
+  .history-item {
+    padding: 15px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+
+  .history-item h4 {
+    margin: 0 0 5px;
+    color: var(--navy);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .history-method {
+    font-size: 0.8rem;
+    background: var(--surface);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  .history-item p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  @media (max-width: 800px) {
+    .billing-detail-grid {
+      flex-direction: column;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="billing-wide">
+  <a href="{% url 'billing_app:invoice_list' %}" class="billing-back">&larr; Kembali ke Daftar Tagihan</a>
+
+  <div class="billing-detail-grid">
+    <div class="billing-card">
+      <h3>Form Pembayaran</h3>
+      <div class="info-row">
+        <span>ID Tagihan</span>
+        <strong>{{ invoice.id|truncatechars:18 }}</strong>
+      </div>
+      <div class="info-row">
+        <span>Pasien</span>
+        <strong>{{ invoice.encounter.patient.name }}</strong>
+      </div>
+      <div class="info-row">
+        <span>MRN</span>
+        <strong>{{ invoice.encounter.patient.mrn }}</strong>
+      </div>
+      <div class="info-row">
+        <span>Total Biaya</span>
+        <strong>Rp {{ invoice.totalAmount }}</strong>
+      </div>
+
+      <div class="total-box">
+        <span style="color: #991b1b; font-weight: 500;">Sisa Harus Dibayar</span>
+        <h2>Rp {{ remaining_balance }}</h2>
+      </div>
+
+      {% if invoice.status == 'UNPAID' %}
+        <form method="POST" class="billing-form">
+          {% csrf_token %}
+          <label>Nominal Pembayaran (Rp)</label>
+          {{ form.paidAmount }}
+
+          <label>Metode Pembayaran</label>
+          {{ form.method }}
+
+          <button type="submit" class="billing-submit">Proses Pembayaran</button>
+        </form>
+      {% else %}
+        <div class="paid-state">
+          <h3>TAGIHAN LUNAS</h3>
+          <p>Tidak ada pembayaran lanjutan yang diperlukan.</p>
+        </div>
+      {% endif %}
     </div>
 
-    <div class="container">
-      <div class="card">
-        <h3>Form Pembayaran</h3>
-        <div class="info-row">
-          <span>ID Tagihan</span> <strong>{{ invoice.id|truncatechars:18 }}</strong>
-        </div>
-        <div class="info-row">
-          <span>Pasien</span> <strong>{{ invoice.encounter.patient.name }}</strong>
-        </div>
-        <div class="info-row">
-          <span>MRN</span> <strong>{{ invoice.encounter.patient.mrn }}</strong>
-        </div>
-        <div class="info-row">
-          <span>Total Biaya</span> <strong>Rp {{ invoice.totalAmount }}</strong>
-        </div>
-
-        <div class="total-box">
-          <span style="color: #991b1b; font-weight: 500;">Sisa Harus Dibayar</span>
-          <h2>Rp {{ remaining_balance }}</h2>
-        </div>
-
-        {% if messages %}
-          {% for message in messages %}
-            <div class="alert {% if message.tags == 'error' %}
-                alert-error
-              {% else %}
-                alert-success
-              {% endif %}">{{ message }}</div>
-          {% endfor %}
-        {% endif %}
-
-        {% if invoice.status == 'UNPAID' %}
-          <form method="POST">
-            {% csrf_token %}
-            <label style="display:block; margin-bottom: 5px; color: var(--navy); font-size: 0.9rem; font-weight: 500;">Nominal Pembayaran (Rp)</label>
-            {{ form.paidAmount }}
-
-            <label style="display:block; margin-bottom: 5px; color: var(--navy); font-size: 0.9rem; font-weight: 500;">Metode Pembayaran</label>
-            {{ form.method }}
-
-            <button type="submit" class="btn-primary">Proses Pembayaran</button>
-          </form>
-        {% else %}
-          <div style="text-align: center; padding: 20px; background: #d1fae5; border-radius: 8px; color: #047857;">
-            <h3 style="border: none; margin: 0; color: inherit;">TAGIHAN LUNAS</h3>
-            <p style="margin: 5px 0 0 0; font-size: 0.9rem;">Tidak ada pembayaran lanjutan yang diperlukan.</p>
+    <div class="billing-card history-card">
+      <h3>Riwayat Cicilan</h3>
+      {% if payments %}
+        {% for p in payments %}
+          <div class="history-item">
+            <h4>
+              <span>Rp {{ p.paidAmount }}</span>
+              <span class="history-method">{{ p.method }}</span>
+            </h4>
+            <p>Diproses oleh: {{ p.processedBy.name }}</p>
+            <p>Waktu: {{ p.paidAt|date:'d M Y, H:i' }}</p>
           </div>
-        {% endif %}
-      </div>
-
-      <div class="card" style="background: #fafbfc;">
-        <h3>Riwayat Cicilan</h3>
-        {% if payments %}
-          {% for p in payments %}
-            <div class="history-item">
-              <h4><span>Rp {{ p.paidAmount }}</span> <span style="font-size: 0.8rem; background: var(--surface); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border);">{{ p.method }}</span></h4>
-              <p>Diproses oleh: {{ p.processedBy.name }}</p>
-              <p>Waktu: {{ p.paidAt|date:'d M Y, H:i' }}</p>
-            </div>
-          {% endfor %}
-        {% else %}
-          <p style="color: var(--muted); text-align: center; margin-top: 30px;">Belum ada riwayat pembayaran.</p>
-        {% endif %}
-      </div>
+        {% endfor %}
+      {% else %}
+        <p style="color: var(--muted); text-align: center; margin-top: 30px;">Belum ada riwayat pembayaran.</p>
+      {% endif %}
     </div>
-  </body>
-</html>
+  </div>
+</section>
+{% endblock %}

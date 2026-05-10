@@ -1,111 +1,102 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Buat Tagihan Baru — MediCore HIS</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-    <style>
-      :root {
-        --navy: #0b1f3a;
-        --teal: #0d7377;
-        --surface: #f8fafb;
-        --muted: #7a8a9a;
-        --text: #1a2a3a;
-        --border: #edf1f5;
-      }
-      body {
-        font-family: 'DM Sans', sans-serif;
-        background-color: var(--surface);
-        color: var(--text);
-        padding: 40px;
-        margin: 0;
-      }
-      .container {
-        max-width: 600px;
-        margin: 0 auto;
-      }
-      .card {
-        background: #fff;
-        padding: 30px;
-        border-radius: 16px;
-        box-shadow: 0 4px 12px rgba(11, 31, 58, 0.04);
-      }
-      h3 {
-        color: var(--navy);
-        margin-top: 0;
-        border-bottom: 1px solid var(--border);
-        padding-bottom: 15px;
-        margin-bottom: 20px;
-      }
-      .form-control {
-        width: 100%;
-        padding: 12px;
-        border-radius: 8px;
-        border: 1px solid var(--border);
-        font-family: inherit;
-        margin-bottom: 20px;
-        box-sizing: border-box;
-      }
-      button.btn-primary {
-        width: 100%;
-        padding: 14px;
-        background: var(--teal);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 1rem;
-      }
-      .alert {
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 15px;
-        font-size: 0.9rem;
-        background: #fee2e2;
-        color: #b91c1c;
-        border: 1px solid #fca5a5;
-      }
-      .alert-info {
-        background: #e0f2fe;
-        color: #0369a1;
-        border: 1px solid #bae6fd;
-        text-align: center;
-        padding: 20px;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <a href="{% url 'billing_app:invoice_list' %}" style="color: var(--navy); text-decoration: none; font-weight: 500; display: inline-block; margin-bottom: 20px;">&larr; Kembali ke Daftar Tagihan</a>
+{% extends "base.html" %}
 
-      <div class="card">
-        <h3>Buat Tagihan Baru</h3>
+{% block title %}Buat Tagihan Baru - MediCore HIS{% endblock %}
 
-        {% if no_encounters %}
-          <div class="alert alert-info">
-            <strong style="display: block; font-size: 1.1rem; margin-bottom: 5px;">Saat ini tidak ada data kunjungan medis (Encounter) baru yang memerlukan pembuatan tagihan.</strong>
-            Seluruh data kunjungan pasien telah tercatat di dalam sistem penagihan.
-          </div>
-        {% else %}
-          {% if messages %}
-            {% for message in messages %}
-              <div class="alert">{{ message }}</div>
-            {% endfor %}
-          {% endif %}
+{% block extra_head %}
+<style>
+  .billing-narrow {
+    max-width: 600px;
+    margin: 0 auto;
+  }
 
-          <form method="POST">
-            {% csrf_token %}
-            <label style="display:block; margin-bottom: 5px; color: var(--navy); font-weight: 500;">{{ form.encounter.label }}</label>
-            {{ form.encounter }}
+  .billing-card {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(11, 31, 58, 0.04);
+  }
 
-            <label style="display:block; margin-bottom: 5px; color: var(--navy); font-weight: 500;">{{ form.totalAmount.label }}</label>
-            {{ form.totalAmount }}
+  .billing-card h3 {
+    color: var(--navy);
+    margin-top: 0;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+  }
 
-            <button type="submit" class="btn-primary">Buat Tagihan</button>
-          </form>
-        {% endif %}
+  .billing-back {
+    color: var(--navy);
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-block;
+    margin-bottom: 20px;
+  }
+
+  .billing-form label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--navy);
+    font-weight: 500;
+  }
+
+  .billing-form select,
+  .billing-form input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-family: inherit;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+  }
+
+  .billing-submit {
+    width: 100%;
+    padding: 14px;
+    background: var(--teal);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .billing-info {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    text-align: center;
+    padding: 20px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="billing-narrow">
+  <a href="{% url 'billing_app:invoice_list' %}" class="billing-back">&larr; Kembali ke Daftar Tagihan</a>
+
+  <div class="billing-card">
+    <h3>Buat Tagihan Baru</h3>
+
+    {% if no_encounters %}
+      <div class="billing-info">
+        <strong style="display: block; font-size: 1.1rem; margin-bottom: 5px;">Saat ini tidak ada data kunjungan medis (Encounter) baru yang memerlukan pembuatan tagihan.</strong>
+        Seluruh data kunjungan pasien telah tercatat di dalam sistem penagihan.
       </div>
-    </div>
-  </body>
-</html>
+    {% else %}
+      <form method="POST" class="billing-form">
+        {% csrf_token %}
+        <label>{{ form.encounter.label }}</label>
+        {{ form.encounter }}
+
+        <label>{{ form.totalAmount.label }}</label>
+        {{ form.totalAmount }}
+
+        <button type="submit" class="billing-submit">Buat Tagihan</button>
+      </form>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
