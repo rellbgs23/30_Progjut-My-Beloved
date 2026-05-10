@@ -581,7 +581,7 @@ Bagian ini mengikuti format test case umum yang diberikan. Screenshot bukti peng
 Test otomatis yang relevan dapat dijalankan dengan:
 
 ```bash
-python manage.py test auth_app core_app medical_app pharmacy_app
+python manage.py test auth_app core_app medical_app pharmacy_app billing_app
 ```
 
 Beberapa test yang mendukung rubrik:
@@ -611,6 +611,13 @@ Beberapa test yang mendukung rubrik:
 - `core_app.tests.PatientPortalTests.test_patient_cannot_access_other_patient_encounter`
 - `medical_app.tests.MedicalSecurityTests.test_invalid_uuid_payload_does_not_execute_sql_injection`
 - `medical_app.tests.MedicalSecurityTests.test_medical_record_is_stored_encrypted`
+- `billing_app.tests.BillingSecurityTestCase.test_sqli_prevention_on_search`
+- `billing_app.tests.BillingSecurityTestCase.test_xss_prevention_on_search`
+- `billing_app.tests.BillingSecurityTestCase.test_unauthenticated_access_redirects_to_login`
+- `billing_app.tests.BillingSecurityTestCase.test_least_privilege_doctor_denied`
+- `billing_app.tests.BillingSecurityTestCase.test_least_privilege_patient_denied`
+- `billing_app.tests.BillingSecurityTestCase.test_csrf_protection_on_payment`
+- `billing_app.tests.BillingSecurityTestCase.test_csrf_protection_on_create_invoice`
 
 ## F. Link Video Demo
 
