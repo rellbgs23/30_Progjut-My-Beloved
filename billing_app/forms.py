@@ -1,7 +1,8 @@
 from decimal import Decimal
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Payment
+from .models import Payment, Invoice
+from medical_app.models import Encounter
 
 
 class PaymentForm(forms.ModelForm):
@@ -17,8 +18,8 @@ class PaymentForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        # Ambil instance 'invoice' yang dilempar dari views.py (kalau ada)
-        # Hapus dari kwargs biar nggak error saat manggil super()
+        # ambil instance 'invoice' yang dilempar dari views.py (kalau ada)
+        # hapus dari kwargs biar nggak error saat manggil super()
         self.invoice_instance = kwargs.pop('invoice', None)
         super().__init__(*args, **kwargs)
 
@@ -28,7 +29,7 @@ class PaymentForm(forms.ModelForm):
     def clean_paidAmount(self):
         paid_amount = self.cleaned_data.get('paidAmount')
 
-        # Aturan baru: validasi minimal bayar Rp 1.000
+        # validasi minimal bayar Rp 1.000
         if paid_amount is None or paid_amount < Decimal('1000.00'):
             raise ValidationError(
                 "Nominal pembayaran minimal adalah Rp 1.000!")
@@ -39,7 +40,7 @@ class PaymentForm(forms.ModelForm):
         cleaned_data = super().clean()
         paid_amount = cleaned_data.get('paidAmount')
 
-        # Cek sisa tagihan langsung di dalam form pakai invoice_instance
+        # cek sisa tagihan langsung di dalam form pakai invoice_instance
         if paid_amount and self.invoice_instance:
             current_payments = sum(
                 (p.paidAmount for p in self.invoice_instance.payment_set.all()), Decimal(
@@ -54,3 +55,24 @@ class PaymentForm(forms.ModelForm):
                 )
 
         return cleaned_data
+
+
+class InvoiceForm(forms.ModelForm):
+    class Meta:
+        model = Invoice
+        fields = ['encounter', 'totalAmount']
+        widgets = {
+            'totalAmount': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+            'encounter': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['encounter'].queryset = Encounter.objects.filter(
+            invoice__isnull=True).order_by('-dateTime')
+
+        self.fields['encounter'].label = "Pilih Kunjungan Pasien (Encounter)"
+        self.fields['totalAmount'].label = "Total Tagihan (Rp)"
+
+        self.fields['encounter'].label_from_instance = lambda obj: f"{obj.patient.name} ({obj.patient.mrn}) - {obj.dateTime.strftime('%d %b %Y') if obj.dateTime else ''}"

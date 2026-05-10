@@ -30,8 +30,7 @@
       }
       h2 {
         color: var(--navy);
-        margin-top: 0;
-        margin-bottom: 20px;
+        margin: 0; /* Margin dihapus biar align sejajar sama tombol */
       }
       .filter-bar {
         display: flex;
@@ -111,11 +110,14 @@
   </head>
   <body>
     <div class="container">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2>Daftar Tagihan Kasir</h2>
-        <a href="/" style="color: var(--muted); text-decoration: none;">&larr; Back to Home</a>
+      <div style="margin-bottom: 15px;">
+        <a href="/" style="color: var(--muted); text-decoration: none; font-size: 0.9rem;">&larr; Back to Home</a>
       </div>
 
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 25px;">
+        <h2>Daftar Tagihan Kasir</h2>
+        <a href="{% url 'billing_app:create_invoice' %}" class="btn-primary" style="background: var(--teal); color: white; text-decoration: none; padding: 10px 16px; border-radius: 8px; font-weight: 500;">+ Buat Tagihan Baru</a>
+      </div>
       <form method="GET" class="filter-bar">
         <input type="text" name="q" value="{{ query }}" placeholder="Cari ID Invoice, MRN, atau Nama..." />
         <select name="status">
@@ -173,9 +175,13 @@
 
               <td>
                 <span class="badge {% if inv.status == 'PAID' %}
-                    badge-paid
+                    
+                     badge-paid
+
                   {% else %}
-                    badge-unpaid
+                    
+                     badge-unpaid
+
                   {% endif %}">
                   {{ inv.status }}
                 </span>

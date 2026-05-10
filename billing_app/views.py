@@ -4,8 +4,8 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Q
 from decimal import Decimal
-from .forms import PaymentForm
-from .models import Invoice, Payment
+from .forms import PaymentForm, InvoiceForm
+from .models import Invoice, Payment, Encounter
 
 
 def is_cashier(user):
@@ -50,13 +50,11 @@ def invoice_pay(request, invoice_id):
     if request.method == 'POST':
         form = PaymentForm(request.POST, invoice=invoice)
 
-        # FIX ERROR: Inject invoice ke dalam instance form SEBELUM form divoalidasi!
         form.instance.invoice = invoice
 
         if form.is_valid():
             try:
                 payment = form.save(commit=False)
-                # Invoice udah aman, tinggal inject kasir
                 payment.processedBy = request.user.staff
                 payment.recordPayment()
 
@@ -65,14 +63,13 @@ def invoice_pay(request, invoice_id):
                     invoice.markAsPaid()
                     messages.success(
                         request, f"LUNAS! Invoice berstatus PAID.")
-                    return redirect('billing_app:invoice_list')
+                    return redirect('billing_app:invoice_pay', invoice_id=invoice.id)
                 else:
                     messages.success(
                         request, f"Pembayaran Rp{payment.paidAmount} dicatat. Sisa tagihan di-update.")
                     return redirect('billing_app:invoice_pay', invoice_id=invoice.id)
 
             except ValidationError as e:
-                # Tangkap error OCL dari model kalau ada
                 if hasattr(e, 'message_dict'):
                     for field, errors in e.message_dict.items():
                         for err in errors:
@@ -81,7 +78,6 @@ def invoice_pay(request, invoice_id):
                     for err in e.messages:
                         messages.error(request, err)
         else:
-            # Looping untuk ngeluarin semua error spesifik dari form
             for field, errors in form.errors.items():
                 for error in errors:
                     # Kalau errornya nempel di specific field (misal paidAmount)
@@ -99,3 +95,41 @@ def invoice_pay(request, invoice_id):
         'payments': payments,
     }
     return render(request, 'billing_app/invoice_pay.html', context)
+
+
+@login_required
+@user_passes_test(is_cashier, login_url='/auth/denied/')
+def create_invoice(request):
+    available_encounters = Encounter.objects.filter(invoice__isnull=True)
+    if not available_encounters.exists():
+        return render(request, 'billing_app/create_invoice.html', {'no_encounters': True})
+
+    if request.method == 'POST':
+        form = InvoiceForm(request.POST)
+        if form.is_valid():
+            try:
+                invoice = form.save()
+
+                if invoice.totalAmount == Decimal('0.00'):
+                    invoice.markAsPaid()
+                    messages.success(
+                        request, f"Tagihan Rp0 untuk {invoice.encounter.patient.name} otomatis LUNAS.")
+                else:
+                    messages.success(
+                        request, f"Berhasil! Tagihan untuk {invoice.encounter.patient.name} telah dibuat.")
+
+                return redirect('billing_app:invoice_list')
+            except ValidationError as e:
+                for error in e.messages:
+                    messages.error(request, error)
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    if field != '__all__':
+                        messages.error(request, f"{error}")
+                    else:
+                        messages.error(request, error)
+    else:
+        form = InvoiceForm()
+
+    return render(request, 'billing_app/create_invoice.html', {'form': form, 'no_encounters': False})
