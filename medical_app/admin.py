@@ -16,7 +16,7 @@ class AppointmentAdmin(admin.ModelAdmin):
 
 @admin.register(Encounter)
 class EncounterAdmin(admin.ModelAdmin):
-    list_display = ("patient", "staff", "appointment", "dateTime")
+    list_display = ("encounterNumber", "patient", "staff", "appointment", "dateTime")
     list_filter = ("dateTime",)
 
 

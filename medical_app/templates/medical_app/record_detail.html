@@ -31,7 +31,7 @@
             {% if prescription %}
                 <a class="btn btn-ghost" href="{% url 'pharmacy_app:prescription_detail' prescription.id %}">View Prescription</a>
             {% else %}
-                <a class="btn btn-primary" href="{% url 'pharmacy_app:create_prescription' record.encounter.id %}">Create Prescription</a>
+                <a class="btn btn-primary" href="{% url 'pharmacy_app:create_prescription' record.encounter.pk %}">Create Prescription</a>
             {% endif %}
         </div>
     </section>

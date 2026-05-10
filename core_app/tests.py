@@ -103,7 +103,7 @@ class PatientPortalTests(TestCase):
 		self.client.login(username="patient1", password="StrongPassword123!")
 
 		response = self.client.get(
-			reverse("core_app:patient_encounter_detail", args=[self.other_encounter.id])
+			reverse("core_app:patient_encounter_detail", args=[self.other_encounter.pk])
 		)
 
 		self.assertEqual(response.status_code, 404)
@@ -145,3 +145,26 @@ class PatientPortalTests(TestCase):
 		})
 
 		self.assertRedirects(response, reverse("core_app:patient_dashboard"))
+
+	def test_encounter_search_accepts_text_input(self):
+		self.client.login(username="patient1", password="StrongPassword123!")
+
+		response = self.client.get(
+			reverse("core_app:patient_encounters"),
+			{"q": str(self.encounter.encounterNumber)},
+		)
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, f"Encounter #{self.encounter.encounterNumber}")
+
+	def test_encounter_search_rejects_sql_injection_payload(self):
+		self.client.login(username="patient1", password="StrongPassword123!")
+
+		response = self.client.get(
+			reverse("core_app:patient_encounters"),
+			{"q": "12345' OR '1'='1"},
+		)
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "No encounter history found.")
+		self.assertNotContains(response, f"Encounter #{self.encounter.encounterNumber}")

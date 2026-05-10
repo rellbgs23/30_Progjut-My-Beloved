@@ -10,6 +10,6 @@ urlpatterns = [
     path("doctors/<uuid:doctor_id>/appointments/", views.doctor_appointments, name="doctor_appointments"),
 
     path("appointments/<uuid:appointment_id>/encounters/new/", views.create_encounter_from_appointment, name="encounter_create_from_appointment"),
-    path("encounters/<uuid:encounter_id>/records/new/", views.create_medical_record, name="medical_record_create"),
+    path("encounters/<int:encounter_id>/records/new/", views.create_medical_record, name="medical_record_create"),
     path("records/<uuid:record_id>/", views.medical_record_detail, name="medical_record_detail"),
 ]

@@ -292,8 +292,8 @@ class Tugas3GeneralSecurityTestCases(TestCase):
             (None, reverse("core_app:patient_register")),
             (self.patient_user, reverse("core_app:patient_request_appointment")),
             (self.registration_user, reverse("medical_app:appointment_create")),
-            (self.doctor_user, reverse("medical_app:medical_record_create", args=[self.encounter.id])),
-            (self.doctor_user, reverse("pharmacy_app:create_prescription", args=[self.encounter.id])),
+            (self.doctor_user, reverse("medical_app:medical_record_create", args=[self.encounter.pk])),
+            (self.doctor_user, reverse("pharmacy_app:create_prescription", args=[self.encounter.pk])),
             (self.pharmacist_user, reverse("pharmacy_app:validate_prescription", args=[self.prescription.id])),
             (self.pharmacist_user, reverse("pharmacy_app:dispense_medicine", args=[self.validated_prescription.id])),
         ]

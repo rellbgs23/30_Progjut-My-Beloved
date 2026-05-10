@@ -27,7 +27,7 @@ def get_current_staff(request):
 @login_required
 @staff_role_required('DOCTOR')
 def create_prescription(request, encounter_id):
-	encounter = get_object_or_404(Encounter, id=encounter_id)
+	encounter = get_object_or_404(Encounter, pk=encounter_id)
 	staff = get_current_staff(request)
 
 	if encounter.staff_id != staff.id:

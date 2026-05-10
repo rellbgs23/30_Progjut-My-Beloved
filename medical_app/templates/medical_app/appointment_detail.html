@@ -70,10 +70,10 @@
                 <a class="btn btn-primary" href="{% url 'medical_app:encounter_create_from_appointment' appointment.id %}">Make Encounter</a>
             {% endif %}
             {% if can_create_medical_record %}
-                <a class="btn btn-primary" href="{% url 'medical_app:medical_record_create' encounter.id %}">Make Medical Record</a>
+                <a class="btn btn-primary" href="{% url 'medical_app:medical_record_create' encounter.pk %}">Make Medical Record</a>
             {% endif %}
             {% if can_create_prescription %}
-                <a class="btn btn-primary" href="{% url 'pharmacy_app:create_prescription' encounter.id %}">Make Prescription</a>
+                <a class="btn btn-primary" href="{% url 'pharmacy_app:create_prescription' encounter.pk %}">Make Prescription</a>
             {% endif %}
         </div>
     {% endif %}
@@ -84,8 +84,8 @@
     <h2 class="section-title">Encounter</h2>
     <dl class="data-list">
         <div class="data-row">
-            <dt class="data-label">Encounter ID</dt>
-            <dd class="data-value">{{ encounter.id }}</dd>
+            <dt class="data-label">Encounter Number</dt>
+            <dd class="data-value">{{ encounter.encounterNumber }}</dd>
         </div>
         <div class="data-row">
             <dt class="data-label">Patient</dt>

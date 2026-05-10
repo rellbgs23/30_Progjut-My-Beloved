@@ -12,17 +12,31 @@
 
 {% block content %}
 <section class="content-card">
+    <form method="get" class="form-panel">
+        <p>
+            <label for="encounter-search">Search Encounter Number</label>
+            <input id="encounter-search" type="text" name="q" value="{{ search_query }}" placeholder="Example: 1" maxlength="64" inputmode="search">
+        </p>
+        <div class="action-row">
+            <button type="submit" class="btn btn-primary">Search</button>
+            {% if search_query %}
+                <a class="btn btn-ghost" href="{% url 'core_app:patient_encounters' %}">Clear</a>
+            {% endif %}
+        </div>
+    </form>
+
     <ul class="list-stack">
         {% for encounter in encounters %}
             <li class="list-item">
                 <div>
-                    <strong>{{ encounter.dateTime }}</strong>
+                    <strong>Encounter #{{ encounter.encounterNumber }}</strong>
+                    <div class="muted">{{ encounter.dateTime }}</div>
                     <div class="muted">Dr. {{ encounter.staff.name }} | {{ encounter.complaint }}</div>
                 </div>
-                <a class="btn btn-ghost" href="{% url 'core_app:patient_encounter_detail' encounter.id %}">Detail</a>
+                <a class="btn btn-ghost" href="{% url 'core_app:patient_encounter_detail_by_number' encounter.encounterNumber %}">Detail</a>
             </li>
         {% empty %}
-            <li class="empty-state">No encounter history.</li>
+            <li class="empty-state">No encounter history found.</li>
         {% endfor %}
     </ul>
 

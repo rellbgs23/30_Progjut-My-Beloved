@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+import re
 
 from auth_app.models import Staff
 from billing_app.models import Invoice
@@ -8,6 +9,23 @@ from medical_app.models import Appointment, Encounter, MedicalRecordEntry, Patie
 from pharmacy_app.models import Prescription
 
 from .forms import PatientAppointmentRequestForm, SelfRegistrationForm
+
+
+MAX_ENCOUNTER_SEARCH_LENGTH = 64
+CONTROL_CHARACTER_RE = re.compile(r"[\x00-\x1f\x7f]")
+ENCOUNTER_NUMBER_RE = re.compile(r"\d+")
+
+
+def clean_encounter_search_query(raw_query):
+	"""
+	Normalize patient-supplied search text before using it in ORM filters.
+
+	The query is still passed to Django's parameterized ORM, so SQL injection
+	payloads are treated as data. We also remove control characters and cap
+	length so the value is safe to display back in the form.
+	"""
+	query = CONTROL_CHARACTER_RE.sub("", raw_query or "")
+	return query.strip()[:MAX_ENCOUNTER_SEARCH_LENGTH]
 
 def home_view(request):
 	current_staff = None
@@ -120,13 +138,27 @@ def patient_encounter_list(request):
 	if error_response:
 		return error_response
 
+	search_query = clean_encounter_search_query(request.GET.get("q", ""))
 	encounters = (
 		Encounter.objects.filter(patient=patient)
 		.select_related("staff")
 		.order_by("-dateTime")
 	)
 
-	return render(request, "core_app/encounter_list.html", {"encounters": encounters})
+	if search_query:
+		if ENCOUNTER_NUMBER_RE.fullmatch(search_query):
+			encounters = encounters.filter(encounterNumber=int(search_query))
+		else:
+			encounters = encounters.none()
+
+	return render(
+		request,
+		"core_app/encounter_list.html",
+		{
+			"encounters": encounters,
+			"search_query": search_query,
+		},
+	)
 
 
 @login_required
@@ -137,7 +169,42 @@ def patient_encounter_detail(request, encounter_id):
 
 	encounter = get_object_or_404(
 		Encounter.objects.select_related("staff"),
-		id=encounter_id,
+		pk=encounter_id,
+		patient=patient,
+	)
+
+	record = MedicalRecordEntry.objects.filter(encounter=encounter).first()
+	diagnosis = "-"
+	treatment_plan = "-"
+	if record:
+		decrypted = record.decrypt_data()
+		diagnosis = decrypted["diagnosis"]
+		treatment_plan = decrypted["treatmentPlan"]
+
+	prescription = Prescription.objects.filter(encounter=encounter).prefetch_related("items").first()
+
+	return render(
+		request,
+		"core_app/encounter_detail.html",
+		{
+			"encounter": encounter,
+			"record": record,
+			"diagnosis": diagnosis,
+			"treatment_plan": treatment_plan,
+			"prescription": prescription,
+		},
+	)
+
+
+@login_required
+def patient_encounter_detail_by_number(request, encounter_number):
+	patient, error_response = _get_patient_or_forbidden(request)
+	if error_response:
+		return error_response
+
+	encounter = get_object_or_404(
+		Encounter.objects.select_related("staff"),
+		encounterNumber=encounter_number,
 		patient=patient,
 	)
 

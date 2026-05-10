@@ -25,7 +25,7 @@ class Prescription(models.Model):
         INVALID = 'INVALID', 'Invalid'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    encounter = models.OneToOneField(Encounter, on_delete=models.CASCADE)
+    encounter = models.OneToOneField(Encounter, on_delete=models.CASCADE, db_constraint=False)
     status = models.CharField(max_length=20, choices=RxStatus.choices, default=RxStatus.CREATED)
     digitalSignature = models.TextField(null=True, blank=True) # <<crypto>>
     validatedAt = models.DateTimeField(null=True, blank=True)

@@ -12,9 +12,6 @@
 
 {% block content %}
 <section class="content-card">
-    <div class="action-row">
-        <a class="btn btn-ghost" href="{% url 'pharmacy_app:dispense_queue' %}">Dispense Queue</a>
-    </div>
 
     {% if prescriptions %}
         <ul class="list-stack">

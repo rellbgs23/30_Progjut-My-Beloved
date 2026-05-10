@@ -191,7 +191,7 @@ def create_encounter_from_appointment(request, appointment_id):
                     appointment.status = "COMPLETED"
                     appointment.save(update_fields=["have_encounter", "status"])
                     messages.success(request, "Encounter created from appointment.")
-                    return redirect("medical_app:medical_record_create", encounter_id=encounter.id)
+                    return redirect("medical_app:medical_record_create", encounter_id=encounter.pk)
                 except ValidationError as error:
                     messages.error(
                         request,
@@ -209,7 +209,7 @@ def create_encounter_from_appointment(request, appointment_id):
 @login_required
 @staff_role_required("DOCTOR")
 def create_medical_record(request, encounter_id):
-    encounter = get_object_or_404(Encounter, id=encounter_id)
+    encounter = get_object_or_404(Encounter, pk=encounter_id)
     staff = get_current_staff(request)
 
     if encounter.staff_id != staff.id:
@@ -228,7 +228,7 @@ def create_medical_record(request, encounter_id):
             record.save()
 
             messages.success(request, "Medical record created securely.")
-            return redirect("pharmacy_app:create_prescription", encounter_id=encounter.id)
+            return redirect("pharmacy_app:create_prescription", encounter_id=encounter.pk)
 
     else:
         form = MedicalRecordEntryForm()

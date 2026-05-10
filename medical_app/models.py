@@ -66,7 +66,7 @@ class Appointment(models.Model):
 
 
 class Encounter(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    encounterNumber = models.PositiveIntegerField(primary_key=True, editable=False)
     appointment = models.OneToOneField(
         Appointment,
         on_delete=models.RESTRICT,
@@ -88,13 +88,23 @@ class Encounter(models.Model):
             if self.appointment.patient_id != self.patient_id:
                 raise ValidationError("Encounter appointment must belong to the same patient.")
 
+    def save(self, *args, **kwargs):
+        if self.encounterNumber is None:
+            latest_number = (
+                Encounter.objects
+                .aggregate(models.Max("encounterNumber"))["encounterNumber__max"]
+                or 0
+            )
+            self.encounterNumber = latest_number + 1
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"Encounter {self.id} - {self.patient}"
+        return f"Encounter #{self.encounterNumber} - {self.patient}"
 
 
 class MedicalRecordEntry(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    encounter = models.ForeignKey(Encounter, on_delete=models.CASCADE)
+    encounter = models.ForeignKey(Encounter, on_delete=models.CASCADE, db_constraint=False)
 
     diagnosis_encrypted = models.TextField()
     treatmentPlan_encrypted = models.TextField()

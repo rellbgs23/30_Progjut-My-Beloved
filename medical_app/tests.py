@@ -61,6 +61,18 @@ class MedicalSecurityTests(TestCase):
         self.assertNotIn("Rest and medication", record.treatmentPlan_encrypted)
         self.assertNotIn("Sensitive note", record.notes_encrypted)
 
+    def test_encounter_number_is_assigned_on_create(self):
+        self.encounter.refresh_from_db()
+
+        second_encounter = Encounter.objects.create(
+            patient=self.patient,
+            staff=self.doctor_staff,
+            complaint="Follow up",
+        )
+
+        self.assertEqual(self.encounter.encounterNumber, 1)
+        self.assertEqual(second_encounter.encounterNumber, 2)
+
     def test_doctor_can_decrypt_own_medical_record(self):
         self.client.login(username="doctor1", password="StrongPassword123!")
 
@@ -101,7 +113,7 @@ class MedicalSecurityTests(TestCase):
         self.client.login(username="doctor1", password="StrongPassword123!")
 
         response = self.client.post(
-            reverse("medical_app:medical_record_create", args=[self.encounter.id]),
+            reverse("medical_app:medical_record_create", args=[self.encounter.pk]),
             {
                 "diagnosis": "Migraine",
                 "treatmentPlan": "Rest and medication",
