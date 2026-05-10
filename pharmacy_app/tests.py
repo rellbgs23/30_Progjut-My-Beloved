@@ -3,7 +3,7 @@ from django.urls import reverse
 
 from auth_app.models import Staff, UserAccount
 from medical_app.models import Encounter, Patient
-from .models import Prescription, PrescriptionItem
+from .models import Medicine, Prescription, PrescriptionItem
 from .utils import sign_prescription
 
 
@@ -46,6 +46,8 @@ class PharmacySecurityTest(TestCase):
 			name='Patient One',
 			dateOfBirth='1990-01-01',
 		)
+		self.paracetamol = Medicine.objects.create(name='Paracetamol')
+		self.amoxicillin = Medicine.objects.create(name='Amoxicillin')
 		self.encounter = Encounter.objects.create(
 			patient=self.patient,
 			staff=self.doctor_staff,
@@ -57,7 +59,7 @@ class PharmacySecurityTest(TestCase):
 		PrescriptionItem.objects.create(
 			prescription=prescription,
 			itemId='ITM001',
-			medicineName='Paracetamol',
+			medicineName=self.paracetamol,
 			dosage='500mg',
 			quantity=10,
 			instruction='3x sehari',
@@ -81,7 +83,7 @@ class PharmacySecurityTest(TestCase):
 		PrescriptionItem.objects.create(
 			prescription=prescription,
 			itemId='ITM001',
-			medicineName='Amoxicillin',
+			medicineName=self.amoxicillin,
 			dosage='500mg',
 			quantity=5,
 			instruction='2x sehari',

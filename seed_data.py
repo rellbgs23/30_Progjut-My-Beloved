@@ -10,7 +10,7 @@ django.setup()
 from auth_app.models import UserAccount, Staff
 from django.utils import timezone
 from medical_app.models import Patient, Appointment, Encounter, MedicalRecordEntry
-from pharmacy_app.models import Prescription, PrescriptionItem
+from pharmacy_app.models import Medicine, Prescription, PrescriptionItem
 from billing_app.models import Invoice, Payment
 
 
@@ -58,6 +58,23 @@ def run_seeder():
         staff, _ = Staff.objects.get_or_create(
             user=user, defaults={"name": f"reg {i}", "role": "REGISTRATION"})
         registration_staff.append(staff)
+
+    medicine_names = [
+        "Paracetamol",
+        "Ibuprofen",
+        "Amoxicillin",
+        "Cetirizine",
+        "Omeprazole",
+        "Metformin",
+        "Amlodipine",
+        "Atorvastatin",
+        "Salbutamol",
+        "Loratadine",
+    ]
+    medicines = []
+    for name in medicine_names:
+        medicine, _ = Medicine.objects.get_or_create(name=name)
+        medicines.append(medicine)
 
     patients = []
     for i in range(1, 11):
@@ -108,7 +125,7 @@ def run_seeder():
         PrescriptionItem.objects.create(
             prescription=rx,
             itemId=f"ITEM-{i}",
-            medicineName=f"Medicine {i}",
+            medicineName=medicines[i],
             dosage="10mg",
             quantity=5,
             instruction="Take twice a day"

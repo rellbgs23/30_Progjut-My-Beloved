@@ -6,7 +6,7 @@ from django.conf import settings
 
 def compute_prescription_signature(prescription) -> str:
     items_data = list(
-        prescription.items.order_by('id').values('medicineName', 'quantity')
+        prescription.items.order_by('id').values('medicineName_id', 'quantity')
     )
 
     payload = json.dumps(

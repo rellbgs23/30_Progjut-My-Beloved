@@ -48,9 +48,6 @@
             {% if request.user.staff.role == 'PHARMACIST' and prescription.status == 'VALIDATED' %}
                 <a class="btn btn-primary" href="{% url 'pharmacy_app:dispense_medicine' prescription.id %}">Dispense Medicine</a>
             {% endif %}
-            {% if request.user.staff.role == 'PHARMACIST' %}
-                <a class="btn btn-ghost" href="{% url 'pharmacy_app:prescription_list' %}">Back to Queue</a>
-            {% endif %}
         </div>
     </section>
 

@@ -1,19 +1,19 @@
 {% extends "base.html" %}
 
-{% block title %}Prescription Queue - MediCore HIS{% endblock %}
+{% block title %}Dispense Queue - MediCore HIS{% endblock %}
 
 {% block page_header %}
 <section class="page-header">
     <p class="eyebrow">Pharmacy</p>
-    <h1 class="page-title">Prescription Queue</h1>
-    <p class="page-subtitle">Prescriptions awaiting pharmacist verification.</p>
+    <h1 class="page-title">Dispense Queue</h1>
+    <p class="page-subtitle">Validated prescriptions awaiting medicine handover.</p>
 </section>
 {% endblock %}
 
 {% block content %}
 <section class="content-card">
     <div class="action-row">
-        <a class="btn btn-ghost" href="{% url 'pharmacy_app:dispense_queue' %}">Dispense Queue</a>
+        <a class="btn btn-ghost" href="{% url 'pharmacy_app:prescription_list' %}">Prescription Queue</a>
     </div>
 
     {% if prescriptions %}
@@ -23,13 +23,14 @@
                     <div>
                         <strong>{{ prescription.encounter.patient.name }}</strong>
                         <div class="muted">Prescription ID: {{ prescription.id }}</div>
+                        <div class="muted">Validated At: {{ prescription.validatedAt|default:"-" }}</div>
                     </div>
-                    <a class="btn btn-primary" href="{% url 'pharmacy_app:prescription_detail' prescription.id %}">View Detail</a>
+                    <a class="btn btn-primary" href="{% url 'pharmacy_app:prescription_detail' prescription.id %}">Detail</a>
                 </li>
             {% endfor %}
         </ul>
     {% else %}
-        <p class="empty-state">No CREATED prescriptions available.</p>
+        <p class="empty-state">No VALIDATED prescriptions waiting for dispense.</p>
     {% endif %}
 </section>
 {% endblock %}

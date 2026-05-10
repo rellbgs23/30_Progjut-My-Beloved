@@ -2,6 +2,29 @@
 
 {% block title %}Create Prescription - MediCore HIS{% endblock %}
 
+{% block extra_head %}
+<style>
+    .add-prescription-item {
+        background: var(--teal);
+        border-color: var(--teal);
+        color: #fff;
+        margin-top: 10px;
+    }
+
+    .add-prescription-item:hover {
+        background: var(--teal-strong);
+        border-color: var(--teal-strong);
+    }
+
+    .remove-prescription-item {
+        background: var(--red);
+        border-color: var(--red);
+        color: #fff;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
 {% block page_header %}
 <section class="page-header">
     <p class="eyebrow">Pharmacy</p>
@@ -16,11 +39,16 @@
         {% csrf_token %}
         {{ formset.management_form }}
 
-        <div class="grid">
+        <div class="grid" id="prescription-items">
             {% for form in formset %}
-                <fieldset class="form-fieldset">
+                <fieldset class="form-fieldset prescription-item">
                     <legend class="eyebrow">Medicine {{ forloop.counter }}</legend>
-                    {{ form.as_p }}
+                    <p>{{ form.medicineName.label_tag }} {{ form.medicineName }} {{ form.medicineName.errors }}</p>
+                    <p>{{ form.dosage.label_tag }} {{ form.dosage }} {{ form.dosage.errors }}</p>
+                    <p>{{ form.quantity.label_tag }} {{ form.quantity }} {{ form.quantity.errors }}</p>
+                    <p>{{ form.instruction.label_tag }} {{ form.instruction }} {{ form.instruction.errors }}</p>
+                    <span hidden>{{ form.DELETE }}</span>
+                    <button class="btn remove-prescription-item" type="button">-</button>
                 </fieldset>
             {% endfor %}
         </div>
@@ -34,5 +62,74 @@
             {% endif %}
         </div>
     </form>
+
+    <template id="empty-prescription-item">
+        <fieldset class="form-fieldset prescription-item">
+            <legend class="eyebrow">Medicine __number__</legend>
+            <p>{{ formset.empty_form.medicineName.label_tag }} {{ formset.empty_form.medicineName }} {{ formset.empty_form.medicineName.errors }}</p>
+            <p>{{ formset.empty_form.dosage.label_tag }} {{ formset.empty_form.dosage }} {{ formset.empty_form.dosage.errors }}</p>
+            <p>{{ formset.empty_form.quantity.label_tag }} {{ formset.empty_form.quantity }} {{ formset.empty_form.quantity.errors }}</p>
+            <p>{{ formset.empty_form.instruction.label_tag }} {{ formset.empty_form.instruction }} {{ formset.empty_form.instruction.errors }}</p>
+            <span hidden>{{ formset.empty_form.DELETE }}</span>
+            <button class="btn remove-prescription-item" type="button">-</button>
+        </fieldset>
+    </template>
 </section>
+
+<script>
+    const itemsContainer = document.querySelector('#prescription-items');
+    const totalFormsInput = document.querySelector('#id_form-TOTAL_FORMS');
+    const emptyItemTemplate = document.querySelector('#empty-prescription-item');
+    const addButton = document.createElement('button');
+
+    addButton.type = 'button';
+    addButton.className = 'btn add-prescription-item';
+    addButton.textContent = '+';
+    itemsContainer.after(addButton);
+
+    function updateItemLabels() {
+        itemsContainer.querySelectorAll('.prescription-item').forEach((item, index) => {
+            const legend = item.querySelector('legend');
+            if (legend) {
+                legend.textContent = `Medicine ${index + 1}`;
+            }
+        });
+    }
+
+    function visibleItemCount() {
+        return itemsContainer.querySelectorAll('.prescription-item:not([hidden])').length;
+    }
+
+    function bindRemoveButton(button) {
+        button.addEventListener('click', () => {
+            const item = button.closest('.prescription-item');
+            const deleteInput = item.querySelector('input[type="checkbox"][name$="-DELETE"]');
+
+            if (visibleItemCount() <= 1) {
+                return;
+            }
+
+            if (deleteInput) {
+                deleteInput.checked = true;
+            }
+
+            item.hidden = true;
+            updateItemLabels();
+        });
+    }
+
+    document.querySelectorAll('.remove-prescription-item').forEach(bindRemoveButton);
+
+    addButton.addEventListener('click', () => {
+        const formIndex = Number(totalFormsInput.value);
+        const html = emptyItemTemplate.innerHTML
+            .replaceAll('__prefix__', formIndex)
+            .replaceAll('__number__', formIndex + 1);
+
+        itemsContainer.insertAdjacentHTML('beforeend', html);
+        totalFormsInput.value = formIndex + 1;
+        bindRemoveButton(itemsContainer.querySelector('.prescription-item:last-child .remove-prescription-item'));
+        updateItemLabels();
+    });
+</script>
 {% endblock %}

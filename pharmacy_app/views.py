@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
@@ -31,9 +33,20 @@ def create_prescription(request, encounter_id):
 	if encounter.staff_id != staff.id:
 		return deny_to_home(request, 'Access denied for this encounter.')
 
-	ItemFormSet = formset_factory(PrescriptionItemForm, extra=1, min_num=1, validate_min=True)
+	ItemFormSet = formset_factory(
+		PrescriptionItemForm,
+		extra=1,
+		min_num=1,
+		validate_min=True,
+		can_delete=True,
+	)
 
 	if request.method == 'POST':
+		existing_prescription = Prescription.objects.filter(encounter=encounter).first()
+		if existing_prescription:
+			messages.info(request, 'This encounter already has a prescription.')
+			return redirect('pharmacy_app:prescription_detail', prescription_id=existing_prescription.id)
+
 		formset = ItemFormSet(request.POST)
 
 		if formset.is_valid():
@@ -44,10 +57,13 @@ def create_prescription(request, encounter_id):
 				)
 
 				for form in formset:
+					if form.cleaned_data.get('DELETE'):
+						continue
+
 					data = form.cleaned_data
 					PrescriptionItem.objects.create(
 						prescription=prescription,
-						itemId=data['itemId'],
+						itemId=f"ITEM-{uuid.uuid4().hex[:10].upper()}",
 						medicineName=data['medicineName'],
 						dosage=data['dosage'],
 						quantity=data['quantity'],
@@ -79,6 +95,19 @@ def prescription_list(request):
 		.order_by('-encounter__dateTime')
 	)
 	return render(request, 'pharmacy_app/prescription_list.html', {'prescriptions': prescriptions})
+
+
+@login_required
+@pharmacist_required
+def dispense_queue(request):
+	prescriptions = (
+		Prescription.objects
+		.filter(status=Prescription.RxStatus.VALIDATED, dispensedAt__isnull=True)
+		.select_related('encounter__patient', 'encounter__staff')
+		.prefetch_related('items')
+		.order_by('-validatedAt')
+	)
+	return render(request, 'pharmacy_app/dispense_queue.html', {'prescriptions': prescriptions})
 
 
 @login_required

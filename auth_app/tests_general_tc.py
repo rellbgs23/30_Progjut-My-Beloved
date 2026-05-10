@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from auth_app.models import Staff, UserAccount
 from medical_app.models import Appointment, Encounter, Patient
-from pharmacy_app.models import Prescription, PrescriptionItem
+from pharmacy_app.models import Medicine, Prescription, PrescriptionItem
 from pharmacy_app.utils import sign_prescription
 
 
@@ -66,6 +66,8 @@ class Tugas3GeneralSecurityTestCases(TestCase):
             name="Pharmacist General",
             role="PHARMACIST",
         )
+        self.paracetamol = Medicine.objects.create(name="Paracetamol")
+        self.amoxicillin = Medicine.objects.create(name="Amoxicillin")
 
         self.encounter = Encounter.objects.create(
             patient=self.patient,
@@ -76,7 +78,7 @@ class Tugas3GeneralSecurityTestCases(TestCase):
         PrescriptionItem.objects.create(
             prescription=self.prescription,
             itemId="ITEM-GEN-1",
-            medicineName="Paracetamol",
+            medicineName=self.paracetamol,
             dosage="500mg",
             quantity=10,
             instruction="3x sehari",
@@ -96,7 +98,7 @@ class Tugas3GeneralSecurityTestCases(TestCase):
         PrescriptionItem.objects.create(
             prescription=self.validated_prescription,
             itemId="ITEM-GEN-2",
-            medicineName="Amoxicillin",
+            medicineName=self.amoxicillin,
             dosage="500mg",
             quantity=5,
             instruction="2x sehari",

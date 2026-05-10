@@ -80,16 +80,57 @@ def appointment_detail(request, appointment_id):
     if not allowed:
         return deny_to_home(request, "Access denied for your role.")
 
+    encounter = getattr(appointment, "encounter", None)
+    medical_record = None
+    medical_record_data = None
+    prescription = None
+
+    if encounter is not None:
+        medical_record = (
+            MedicalRecordEntry.objects
+            .filter(encounter=encounter)
+            .order_by("-createdAt")
+            .first()
+        )
+        if medical_record is not None:
+            medical_record_data = medical_record.decrypt_data()
+        prescription = getattr(encounter, "prescription", None)
+        if prescription is not None:
+            prescription = (
+                prescription.__class__.objects
+                .select_related("dispensedBy")
+                .prefetch_related("items__medicineName")
+                .get(id=prescription.id)
+            )
+
     can_create_encounter = (
         staff.role == "DOCTOR"
         and appointment.doctor_id == staff.id
         and appointment.status == "SCHEDULED"
-        and not appointment.have_encounter
+        and encounter is None
+    )
+    can_create_medical_record = (
+        staff.role == "DOCTOR"
+        and appointment.doctor_id == staff.id
+        and encounter is not None
+        and medical_record is None
+    )
+    can_create_prescription = (
+        staff.role == "DOCTOR"
+        and appointment.doctor_id == staff.id
+        and encounter is not None
+        and prescription is None
     )
 
     return render(request, "medical_app/appointment_detail.html", {
         "appointment": appointment,
+        "encounter": encounter,
+        "medical_record": medical_record,
+        "medical_record_data": medical_record_data,
+        "prescription": prescription,
         "can_create_encounter": can_create_encounter,
+        "can_create_medical_record": can_create_medical_record,
+        "can_create_prescription": can_create_prescription,
     })
 
 
@@ -187,7 +228,7 @@ def create_medical_record(request, encounter_id):
             record.save()
 
             messages.success(request, "Medical record created securely.")
-            return redirect("medical_app:medical_record_detail", record_id=record.id)
+            return redirect("pharmacy_app:create_prescription", encounter_id=encounter.id)
 
     else:
         form = MedicalRecordEntryForm()
@@ -198,17 +239,22 @@ def create_medical_record(request, encounter_id):
 @login_required
 @staff_role_required("DOCTOR")
 def medical_record_detail(request, record_id):
-    record = get_object_or_404(MedicalRecordEntry, id=record_id)
+    record = get_object_or_404(
+        MedicalRecordEntry.objects.select_related("encounter__staff"),
+        id=record_id,
+    )
     staff = get_current_staff(request)
 
     if record.encounter.staff_id != staff.id:
         return deny_to_home(request, "Access denied for this medical record.")
 
     decrypted_data = record.decrypt_data()
+    prescription = getattr(record.encounter, "prescription", None)
 
     return render(request, "medical_app/record_detail.html", {
         "record": record,
         "diagnosis": decrypted_data["diagnosis"],
         "treatmentPlan": decrypted_data["treatmentPlan"],
         "notes": decrypted_data["notes"],
+        "prescription": prescription,
     })

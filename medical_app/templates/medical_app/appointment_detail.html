@@ -36,7 +36,27 @@
         <div class="data-row">
             <dt class="data-label">Encounter</dt>
             <dd class="data-value">
-                {% if appointment.have_encounter %}
+                {% if encounter %}
+                    Created
+                {% else %}
+                    Not created
+                {% endif %}
+            </dd>
+        </div>
+        <div class="data-row">
+            <dt class="data-label">Medical Record</dt>
+            <dd class="data-value">
+                {% if medical_record %}
+                    Created
+                {% else %}
+                    Not created
+                {% endif %}
+            </dd>
+        </div>
+        <div class="data-row">
+            <dt class="data-label">Prescription</dt>
+            <dd class="data-value">
+                {% if prescription %}
                     Created
                 {% else %}
                     Not created
@@ -44,10 +64,122 @@
             </dd>
         </div>
     </dl>
-    {% if can_create_encounter %}
+    {% if can_create_encounter or can_create_medical_record or can_create_prescription %}
         <div class="action-row">
-            <a class="btn btn-primary" href="{% url 'medical_app:encounter_create_from_appointment' appointment.id %}">Make Encounter</a>
+            {% if can_create_encounter %}
+                <a class="btn btn-primary" href="{% url 'medical_app:encounter_create_from_appointment' appointment.id %}">Make Encounter</a>
+            {% endif %}
+            {% if can_create_medical_record %}
+                <a class="btn btn-primary" href="{% url 'medical_app:medical_record_create' encounter.id %}">Make Medical Record</a>
+            {% endif %}
+            {% if can_create_prescription %}
+                <a class="btn btn-primary" href="{% url 'pharmacy_app:create_prescription' encounter.id %}">Make Prescription</a>
+            {% endif %}
         </div>
     {% endif %}
 </section>
+
+{% if encounter %}
+<section class="content-card">
+    <h2 class="section-title">Encounter</h2>
+    <dl class="data-list">
+        <div class="data-row">
+            <dt class="data-label">Encounter ID</dt>
+            <dd class="data-value">{{ encounter.id }}</dd>
+        </div>
+        <div class="data-row">
+            <dt class="data-label">Patient</dt>
+            <dd class="data-value">{{ encounter.patient.name }}</dd>
+        </div>
+        <div class="data-row">
+            <dt class="data-label">Doctor</dt>
+            <dd class="data-value">{{ encounter.staff.name }}</dd>
+        </div>
+        <div class="data-row">
+            <dt class="data-label">Date Time</dt>
+            <dd class="data-value">{{ encounter.dateTime }}</dd>
+        </div>
+        <div class="data-row">
+            <dt class="data-label">Complaint</dt>
+            <dd class="data-value">{{ encounter.complaint }}</dd>
+        </div>
+    </dl>
+</section>
+{% endif %}
+
+{% if medical_record %}
+<section class="content-card">
+    <h2 class="section-title">Medical Record</h2>
+    <dl class="data-list">
+        <div class="data-row">
+            <dt class="data-label">Record ID</dt>
+            <dd class="data-value">{{ medical_record.id }}</dd>
+        </div>
+        <div class="data-row">
+            <dt class="data-label">Diagnosis</dt>
+            <dd class="data-value">{{ medical_record_data.diagnosis }}</dd>
+        </div>
+        <div class="data-row">
+            <dt class="data-label">Treatment Plan</dt>
+            <dd class="data-value">{{ medical_record_data.treatmentPlan }}</dd>
+        </div>
+        <div class="data-row">
+            <dt class="data-label">Notes</dt>
+            <dd class="data-value">{{ medical_record_data.notes|default:"-" }}</dd>
+        </div>
+        <div class="data-row">
+            <dt class="data-label">Created At</dt>
+            <dd class="data-value">{{ medical_record.createdAt }}</dd>
+        </div>
+    </dl>
+</section>
+{% endif %}
+
+{% if prescription %}
+<section class="content-card">
+    <h2 class="section-title">Prescription</h2>
+    <dl class="data-list">
+        <div class="data-row">
+            <dt class="data-label">Prescription ID</dt>
+            <dd class="data-value">{{ prescription.id }}</dd>
+        </div>
+        <div class="data-row">
+            <dt class="data-label">Status</dt>
+            <dd class="data-value"><span class="badge badge-{{ prescription.status|lower }}">{{ prescription.status }}</span></dd>
+        </div>
+        <div class="data-row">
+            <dt class="data-label">Validated At</dt>
+            <dd class="data-value">{{ prescription.validatedAt|default:"-" }}</dd>
+        </div>
+        <div class="data-row">
+            <dt class="data-label">Dispensed At</dt>
+            <dd class="data-value">{{ prescription.dispensedAt|default:"-" }}</dd>
+        </div>
+        <div class="data-row">
+            <dt class="data-label">Dispensed By</dt>
+            <dd class="data-value">{{ prescription.dispensedBy.name|default:"-" }}</dd>
+        </div>
+        <div class="data-row">
+            <dt class="data-label">Digital Signature</dt>
+            <dd class="data-value">{{ prescription.digitalSignature|default:"-" }}</dd>
+        </div>
+    </dl>
+
+    <h3 class="section-title">Medication Items</h3>
+    <ul class="list-stack">
+        {% for item in prescription.items.all %}
+            <li class="list-item">
+                <div>
+                    <strong>{{ item.medicineName.name }}</strong>
+                    <div class="muted">Item ID: {{ item.itemId }}</div>
+                    <div class="muted">Dosage: {{ item.dosage }} | Quantity: {{ item.quantity }}</div>
+                    <div class="muted">Instruction: {{ item.instruction }}</div>
+                </div>
+            </li>
+        {% empty %}
+            <li class="empty-state">No medication items recorded.</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
 {% endblock %}
