@@ -3,7 +3,7 @@ import re
 from django import forms
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from auth_app.models import Staff, UserAccount
@@ -37,6 +37,8 @@ class SelfRegistrationForm(forms.Form):
         value = self.cleaned_data["username"].strip()
         if not USERNAME_REGEX.fullmatch(value):
             raise ValidationError("Username hanya boleh berisi huruf, angka, dan simbol @.+_-.")
+        if UserAccount.objects.filter(username__iexact=value).exists():
+            raise ValidationError("Username sudah digunakan.")
         return value
 
     def clean_password(self):
@@ -85,24 +87,28 @@ class SelfRegistrationForm(forms.Form):
 
         return cleaned_data
 
-    @transaction.atomic
     def save(self):
-        user = UserAccount.objects.create_user(
-            username=self.cleaned_data["username"],
-            email=self.cleaned_data["email"],
-            password=self.cleaned_data["password"],
-            is_patient=True,
-            mfaEnabled=False,
-        )
+        try:
+            with transaction.atomic():
+                user = UserAccount.objects.create_user(
+                    username=self.cleaned_data["username"],
+                    email=self.cleaned_data["email"],
+                    password=self.cleaned_data["password"],
+                    is_patient=True,
+                    mfaEnabled=False,
+                )
 
-        patient = Patient.objects.create(
-            user=user,
-            mrn=Patient.generate_mrn(),
-            name=self.cleaned_data["full_name"],
-            dateOfBirth=self.cleaned_data["date_of_birth"],
-            address=self.cleaned_data["address"],
-            phoneNumber=self.cleaned_data["phone_number"],
-        )
+                patient = Patient.objects.create(
+                    user=user,
+                    mrn=Patient.generate_mrn(),
+                    name=self.cleaned_data["full_name"],
+                    dateOfBirth=self.cleaned_data["date_of_birth"],
+                    address=self.cleaned_data["address"],
+                    phoneNumber=self.cleaned_data["phone_number"],
+                )
+        except IntegrityError as error:
+            self.add_error("username", "Username sudah digunakan.")
+            raise ValidationError("Registrasi gagal karena username sudah digunakan.") from error
 
         return user, patient
 

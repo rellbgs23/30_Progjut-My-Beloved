@@ -1,4 +1,7 @@
+from unittest.mock import patch
+
 from cryptography.fernet import Fernet
+from django.db import IntegrityError
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -124,6 +127,45 @@ class PatientPortalTests(TestCase):
 		self.assertContains(response, "Alamat mengandung karakter")
 		self.assertContains(response, "No. telepon hanya boleh")
 		self.assertFalse(UserAccount.objects.filter(email="new@example.com").exists())
+
+	def test_self_registration_rejects_existing_username(self):
+		response = self.client.post(
+			reverse("core_app:patient_register"),
+			{
+				"username": "patient1",
+				"email": "duplicate@example.com",
+				"password": "StrongPassword123!",
+				"confirm_password": "StrongPassword123!",
+				"full_name": "Duplicate Patient",
+				"date_of_birth": "2000-01-01",
+				"address": "Jl. Aman 1",
+				"phone_number": "08123456789",
+			},
+		)
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Username sudah digunakan.")
+		self.assertFalse(UserAccount.objects.filter(email="duplicate@example.com").exists())
+
+	def test_self_registration_handles_username_integrity_error(self):
+		with patch("core_app.forms.UserAccount.objects.create_user", side_effect=IntegrityError):
+			response = self.client.post(
+				reverse("core_app:patient_register"),
+				{
+					"username": "racepatient",
+					"email": "race@example.com",
+					"password": "StrongPassword123!",
+					"confirm_password": "StrongPassword123!",
+					"full_name": "Race Patient",
+					"date_of_birth": "2000-01-01",
+					"address": "Jl. Aman 1",
+					"phone_number": "08123456789",
+				},
+			)
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Username sudah digunakan.")
+		self.assertFalse(UserAccount.objects.filter(username="racepatient").exists())
 
 	def test_patient_cannot_access_other_patient_encounter(self):
 		self.client.login(username="patient1", password="StrongPassword123!")

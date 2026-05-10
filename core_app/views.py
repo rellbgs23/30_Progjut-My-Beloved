@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
 import re
 
@@ -62,9 +63,13 @@ def self_register(request):
 	if request.method == "POST":
 		form = SelfRegistrationForm(request.POST)
 		if form.is_valid():
-			form.save()
-			messages.success(request, "Registrasi berhasil. Silakan login sebagai pasien.")
-			return redirect("auth_app:login")
+			try:
+				form.save()
+			except ValidationError:
+				pass
+			else:
+				messages.success(request, "Registrasi berhasil. Silakan login sebagai pasien.")
+				return redirect("auth_app:login")
 	else:
 		form = SelfRegistrationForm()
 
