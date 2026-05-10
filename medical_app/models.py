@@ -58,6 +58,8 @@ class Appointment(models.Model):
     have_encounter = models.BooleanField(default=False)
 
     def clean(self):
+        if not self.doctor_id:
+            return
         if self.doctor.role != "DOCTOR":
             raise ValidationError("Appointment doctor must have DOCTOR role.")
 

@@ -1,5 +1,11 @@
+import re
+
 from django import forms
 from .models import Medicine
+
+
+DOSAGE_REGEX = re.compile(r"^[A-Za-z0-9 .,+/%\-]+$")
+INSTRUCTION_REGEX = re.compile(r"^[A-Za-z0-9 .,?!'():;#/\-\r\n]+$")
 
 
 class PrescriptionItemForm(forms.Form):
@@ -19,7 +25,12 @@ class PrescriptionItemForm(forms.Form):
         value = self.cleaned_data['dosage'].strip()
         if not value:
             raise forms.ValidationError('Dosage is required.')
+        if not DOSAGE_REGEX.fullmatch(value):
+            raise forms.ValidationError('Dosage contains unsafe characters.')
         return value
 
     def clean_instruction(self):
-        return self.cleaned_data['instruction'].strip()
+        value = self.cleaned_data['instruction'].strip()
+        if not INSTRUCTION_REGEX.fullmatch(value):
+            raise forms.ValidationError('Instruction contains unsafe characters.')
+        return value

