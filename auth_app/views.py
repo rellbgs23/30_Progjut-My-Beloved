@@ -23,6 +23,9 @@ def _remaining_attempts_message(remaining_attempts):
         "Username atau password salah. "
         f"Sisa percobaan sebelum akun terkunci: {remaining_attempts}."
     )
+    
+def _default_failed_message():
+    return ("Username atau password salah.")
 
 
 def _lockout_message(user):
@@ -50,7 +53,7 @@ def login_view(request):
                 return _login_failure(
                     request,
                     form,
-                    _remaining_attempts_message(MAX_FAILED_LOGIN_ATTEMPTS - 1),
+                    _default_failed_message()
                 )
 
             if user_obj.is_locked():
