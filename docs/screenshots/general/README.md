@@ -5,9 +5,11 @@ Simpan screenshot bukti pengujian umum di folder ini dengan nama file berikut ag
 - `TC-SQLi-01.png`
 - `TC-SQLi-02.png`
 - `TC-SQLi-03.png`
+- `TC-SQLi-04a.png`
 - `TC-CI-01.png`
 - `TC-CI-02.png`
 - `TC-CI-03.png`
+- `TC-CI-04a.png`
 - `TC-BA-01.png`
 - `TC-BA-02.png`
 - `TC-BA-03.png`
@@ -16,3 +18,4 @@ Simpan screenshot bukti pengujian umum di folder ini dengan nama file berikut ag
 - `TC-CSRF-01.png`
 - `TC-CSRF-02.png`
 - `TC-CSRF-03.png`
+- `TC-CSRF-04a.png`

