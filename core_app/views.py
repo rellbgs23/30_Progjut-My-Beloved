@@ -89,9 +89,9 @@ def request_appointment(request):
 		if form.is_valid():
 			appointment = form.save(commit=False)
 			appointment.patient = patient
-			appointment.status = "SCHEDULED"
+			appointment.status = "PENDING"
 			appointment.save()
-			messages.success(request, "Janji temu berhasil dibuat.")
+			messages.success(request, "Permintaan janji temu berhasil dibuat dan menunggu persetujuan.")
 			return redirect("core_app:patient_appointments")
 	else:
 		form = PatientAppointmentRequestForm()

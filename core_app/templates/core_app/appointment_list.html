@@ -24,7 +24,7 @@
                     <strong>{{ appointment.scheduledAt }}</strong>
                     <div class="muted">Dr. {{ appointment.doctor.name }} | {{ appointment.reason }}</div>
                 </div>
-                <span class="badge badge-scheduled">{{ appointment.status }}</span>
+                <span class="badge badge-{{ appointment.status|lower }}">{{ appointment.status }}</span>
             </li>
         {% empty %}
             <li class="empty-state">No appointments found.</li>

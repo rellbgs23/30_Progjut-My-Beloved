@@ -33,7 +33,9 @@
                     <a href="{% url 'core_app:patient_invoices' %}">Invoices</a>
                 {% else %}
                     {% if request.user.staff.role == "REGISTRATION" %}
-                        <a href="{% url 'medical_app:appointment_create' %}">New Appointment</a>
+                        <a href="{% url 'medical_app:appointment_create' %}">Review Appointments</a>
+                    {% elif request.user.staff.role == "DOCTOR" %}
+                        <a href="{% url 'medical_app:doctor_appointments' request.user.staff.id %}">Appointments</a>
                     {% elif request.user.staff.role == "PHARMACIST" %}
                         <a href="{% url 'pharmacy_app:prescription_list' %}">Prescription Queue</a>
                     {% elif request.user.staff.role == "CASHIER" %}

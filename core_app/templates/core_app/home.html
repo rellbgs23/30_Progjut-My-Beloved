@@ -17,7 +17,7 @@
                 {% elif current_staff %}
                     <a href="{% url 'auth_app:profile' %}" class="btn btn-primary">Open Profile</a>
                     {% if current_staff.role == 'REGISTRATION' %}
-                        <a href="{% url 'medical_app:appointment_create' %}" class="btn btn-ghost">Create Appointment</a>
+                        <a href="{% url 'medical_app:appointment_create' %}" class="btn btn-ghost">Review Appointments</a>
                     {% elif current_staff.role == 'PHARMACIST' %}
                         <a href="{% url 'pharmacy_app:prescription_list' %}" class="btn btn-ghost">Prescription Queue</a>
                     {% elif current_staff.role == 'CASHIER' %}

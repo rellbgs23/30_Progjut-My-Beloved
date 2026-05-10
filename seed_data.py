@@ -8,7 +8,8 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'progjut_hospital_system.setting
 django.setup()
 
 from auth_app.models import UserAccount, Staff
-from medical_app.models import Patient, Encounter, MedicalRecordEntry
+from django.utils import timezone
+from medical_app.models import Patient, Appointment, Encounter, MedicalRecordEntry
 from pharmacy_app.models import Prescription, PrescriptionItem
 from billing_app.models import Invoice, Payment
 
@@ -47,6 +48,17 @@ def run_seeder():
             user=user, defaults={"name": f"Pharmacist {i}", "role": "PHARMACIST"})
         pharmacists.append(staff)
 
+    registration_staff = []
+    for i in range(1, 11):
+        user, _ = UserAccount.objects.get_or_create(username=f"reg{i}")
+        user.set_password("hitam123")
+        user.is_staff = True
+        user.mfaEnabled = True
+        user.save()
+        staff, _ = Staff.objects.get_or_create(
+            user=user, defaults={"name": f"reg {i}", "role": "REGISTRATION"})
+        registration_staff.append(staff)
+
     patients = []
     for i in range(1, 11):
         user, _ = UserAccount.objects.get_or_create(
@@ -66,11 +78,23 @@ def run_seeder():
         patients.append(patient)
 
     for i in range(10):
+        appointment = Appointment.objects.create(
+            patient=patients[i],
+            doctor=doctors[i],
+            scheduledAt=timezone.now() - timedelta(days=10 - i),
+            reason=f"Patient complaint number {i}",
+            status="SCHEDULED",
+        )
+
         enc = Encounter.objects.create(
+            appointment=appointment,
             patient=patients[i],
             staff=doctors[i],
             complaint=f"Patient complaint number {i}"
         )
+        appointment.status = "COMPLETED"
+        appointment.have_encounter = True
+        appointment.save(update_fields=["status", "have_encounter"])
 
         mre = MedicalRecordEntry.objects.create(encounter=enc)
         mre.encrypt_data(

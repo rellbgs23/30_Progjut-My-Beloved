@@ -136,7 +136,7 @@ class PatientPortalTests(TestCase):
 		)
 
 		self.assertEqual(response.status_code, 302)
-		self.assertTrue(Appointment.objects.filter(patient=self.patient, status="SCHEDULED").exists())
+		self.assertTrue(Appointment.objects.filter(patient=self.patient, status="PENDING").exists())
 
 	def test_patient_login_redirects_to_patient_dashboard(self):
 		response = self.client.post(reverse("auth_app:login"), {

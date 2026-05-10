@@ -35,6 +35,7 @@ class Patient(models.Model):
 
 class Appointment(models.Model):
     STATUS_CHOICES = [
+        ("PENDING", "Pending"),
         ("SCHEDULED", "Scheduled"),
         ("COMPLETED", "Completed"),
         ("CANCELLED", "Cancelled"),
@@ -52,8 +53,9 @@ class Appointment(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default="SCHEDULED",
+        default="PENDING",
     )
+    have_encounter = models.BooleanField(default=False)
 
     def clean(self):
         if self.doctor.role != "DOCTOR":
@@ -65,6 +67,13 @@ class Appointment(models.Model):
 
 class Encounter(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    appointment = models.OneToOneField(
+        Appointment,
+        on_delete=models.RESTRICT,
+        related_name="encounter",
+        null=True,
+        blank=True,
+    )
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     staff = models.ForeignKey(Staff, on_delete=models.RESTRICT)
     dateTime = models.DateTimeField(auto_now_add=True)
@@ -73,6 +82,11 @@ class Encounter(models.Model):
     def clean(self):
         if self.staff.role != "DOCTOR":
             raise ValidationError("Encounter staff must have DOCTOR role.")
+        if self.appointment:
+            if self.appointment.doctor_id != self.staff_id:
+                raise ValidationError("Encounter appointment must belong to the same doctor.")
+            if self.appointment.patient_id != self.patient_id:
+                raise ValidationError("Encounter appointment must belong to the same patient.")
 
     def __str__(self):
         return f"Encounter {self.id} - {self.patient}"

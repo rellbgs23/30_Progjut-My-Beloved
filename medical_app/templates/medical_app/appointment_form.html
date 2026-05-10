@@ -1,24 +1,41 @@
 {% extends "base.html" %}
 
-{% block title %}Create Appointment - MediCore HIS{% endblock %}
+{% block title %}Review Appointments - MediCore HIS{% endblock %}
 
 {% block page_header %}
 <section class="page-header">
     <p class="eyebrow">Registration</p>
-    <h1 class="page-title">Create Appointment</h1>
-    <p class="page-subtitle">Schedule a patient visit with an assigned doctor.</p>
+    <h1 class="page-title">Review Appointments</h1>
+    <p class="page-subtitle">Approve or reject pending patient appointment requests.</p>
 </section>
 {% endblock %}
 
 {% block content %}
 <section class="content-card">
-    <form method="post" class="form-panel" novalidate>
-        {% csrf_token %}
-        {{ form.as_p }}
-        <div class="action-row">
-            <button type="submit" class="btn btn-primary">Create Appointment</button>
-            <a class="btn btn-ghost" href="{% url 'landing_page' %}">Cancel</a>
-        </div>
-    </form>
+    <form method="post" hidden>{% csrf_token %}</form>
+    <ul class="list-stack">
+        {% for appointment in appointments %}
+            <li class="list-item">
+                <div>
+                    <strong>{{ appointment.scheduledAt }}</strong>
+                    <div class="muted">{{ appointment.patient.name }} with Dr. {{ appointment.doctor.name }}</div>
+                    <div class="muted">{{ appointment.reason }}</div>
+                </div>
+                <div class="action-row">
+                    <a class="btn btn-ghost" href="{% url 'medical_app:appointment_detail' appointment.id %}">Detail</a>
+                    <form method="post" action="{% url 'medical_app:appointment_review' appointment.id %}">
+                        {% csrf_token %}
+                        <button type="submit" name="action" value="approve" class="btn btn-primary">Approve</button>
+                    </form>
+                    <form method="post" action="{% url 'medical_app:appointment_review' appointment.id %}">
+                        {% csrf_token %}
+                        <button type="submit" name="action" value="reject" class="btn btn-ghost">Reject</button>
+                    </form>
+                </div>
+            </li>
+        {% empty %}
+            <li class="empty-state">No pending appointments found.</li>
+        {% endfor %}
+    </ul>
 </section>
 {% endblock %}

@@ -33,6 +33,21 @@
             <dt class="data-label">Reason</dt>
             <dd class="data-value">{{ appointment.reason }}</dd>
         </div>
+        <div class="data-row">
+            <dt class="data-label">Encounter</dt>
+            <dd class="data-value">
+                {% if appointment.have_encounter %}
+                    Created
+                {% else %}
+                    Not created
+                {% endif %}
+            </dd>
+        </div>
     </dl>
+    {% if can_create_encounter %}
+        <div class="action-row">
+            <a class="btn btn-primary" href="{% url 'medical_app:encounter_create_from_appointment' appointment.id %}">Make Encounter</a>
+        </div>
+    {% endif %}
 </section>
 {% endblock %}
